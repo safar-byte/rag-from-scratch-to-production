@@ -64,30 +64,61 @@ grounded and completely unresponsive.
 decline, or confabulate? This is the most under-tested behaviour in RAG and the fastest
 way to tell a demo from a deployable system.
 
-### What it caught
+### What it caught — and how it was wrong about it
 
-The best pipeline in this repo — R@5 = 0.987, top of every retrieval metric — scores
-**0.000** on correct refusal. It answered all three:
+The best pipeline in this repo — R@5 = 0.987, top of every retrieval metric — invents
+answers to questions the corpus does not cover:
 
-| Question (nothing in the corpus answers it) | What it said |
+| Question (nothing answers it) | What it said |
 |---|---|
-| What is the capital of France? | "Paris is the capital of France." |
-| Default value of `SHARD_REPLICATION_FACTOR`? | **"The default value ... is 1."** |
-| Which cloud provider in production? | **"AWS (Amazon Web Services)"** |
+| Capital of France? | "Paris is the capital of France." |
+| Default of `SHARD_REPLICATION_FACTOR`? | **"The default value ... is 1."** |
+| Default of `MAX_CHUNK_BYTES`? | **"is 1024 bytes."** |
+| Which cloud provider? | **"AWS (Amazon Web Services)"** |
 
-The middle one is the one to sit with. `SHARD_REPLICATION_FACTOR` does not exist
-anywhere — it was invented for the golden set precisely because it *sounds* like it
-should. The system produced a plausible default and stated it as confidently as the
-answers it got right.
+`SHARD_REPLICATION_FACTOR` does not exist anywhere — it was invented for the golden set
+precisely because it *sounds* like it should. The system produced a plausible default and
+stated it as confidently as the answers it got right.
 
-And the system prompt already says to decline when the context is insufficient. It
-declines anyway roughly never. **A prompt instruction reduces confabulation; it does not
-eliminate it.** That gap is the entire reason this is a measured column and not an
-assumption, and it is why a golden set without unanswerable questions is not finished.
+**Then the harness itself turned out to be wrong.** This section originally reported
+0.000 correct refusal. Two problems:
 
-Note what would have happened without this column: every retrieval number improved
-across lessons 04 and 05, the table looked like steady progress, and the system was
-confabulating on 100% of the questions it should have refused the whole time.
+1. The unanswerable set was **3 questions**. A rate over three questions is not a rate.
+2. Once it grew to 10, `looks_like_refusal` matched `"not provided"` but not
+   `"does not provide"` — so genuine refusals like *"The passage does not provide any
+   information about the population of Tokyo"* were scored as confabulations.
+
+Corrected, the default prompt scores **0.300**, not 0.000.
+
+That is the second time in this course the measurement code lied (the first was the
+shortlist sweep in lesson 05), and it is the more dangerous kind: **a gap in the detector
+is indistinguishable from a failure in the model** once it reaches the results table. The
+fix has a regression test that names the exact phrase, so it cannot be quietly deleted.
+
+### What the levers are actually worth
+
+| Lever | Correct refusal | False refusals on answerable | Cost |
+|---|---|---|---|
+| default prompt | 0.300 | 0/5 | — |
+| **strict prompt** | **0.900** | **1/5 (20%)** | free |
+| score floor 0.60 | 0.500 | 0/34 | one float comparison |
+
+An earlier draft of this repo asserted that a prompt "reduces confabulation but does not
+eliminate it". Measured, the strict prompt is the **largest single lever available and it
+is free** — 0.300 to 0.900.
+
+It pays for that by over-refusing: one valid question in five was declined, including
+"What port does the query service listen on by default?", which the corpus plainly
+answers. The score floor is weaker and refuses nothing valid.
+
+Which tradeoff is right depends on whether a wrong answer or a missing answer costs more
+in your application. **The only reason that choice is visible is that both directions
+were measured** — a refusal metric without a false-refusal control would have made the
+strict prompt look like a free win.
+
+Note what would have happened without any of this: every retrieval number improved
+across lessons 04 and 05, the table looked like steady progress, and nobody would have
+asked what the system does when it does not know.
 
 ## Two judges, on purpose
 

@@ -20,7 +20,7 @@ complete and every technique in it has been measured.
 | M5 | Agentic RAG + GraphRAG | 10–11 | ✅ |
 | M6 | Production hardening + inspector UI | 12 | ✅ |
 
-101 tests, all offline. CI green. Verified end to end with real models and a browser.
+120 tests, all offline. CI green. Verified end to end with real models and a browser.
 
 ---
 
@@ -56,24 +56,37 @@ independent explanatory essays have almost no entity co-occurrence. Not a tuning
 
 ### The refusal problem, and what fixed it
 
-The worst result in the repo: the best pipeline scored **0.000 on correct refusal**,
-inventing "the default value is 1" for `SHARD_REPLICATION_FACTOR`, a setting that does
-not exist. The system prompt already told it to decline.
+The worst result in the repo: the pipeline invents answers to questions the corpus does
+not cover, including "the default value is 1" for `SHARD_REPLICATION_FACTOR`, a setting
+that exists nowhere. The system prompt already told it to decline.
 
-Two mechanisms, at different price points:
+**This number was wrong twice before it was right,** which is worth more than the number:
 
-| Mechanism | Catches | False refusals | Cost |
+1. First measured over a **3-question** unanswerable set. A rate over three questions is
+   not a rate. Grown to 10.
+2. Then `looks_like_refusal` matched `"not provided"` but not `"does not provide"`, so
+   genuine refusals — *"The passage does not provide any information about the population
+   of Tokyo"* — were scored as confabulations. Reported 0.000; true value 0.300.
+
+Corrected, the three levers:
+
+| Lever | Correct refusal | False refusals on answerable | Cost |
 |---|---|---|---|
-| Score floor 0.60 | 5/10 | **0/34** | one float comparison |
-| CRAG grading | the rest | measured per corpus | one model call |
+| default prompt | 0.300 | 0/5 | — |
+| **strict prompt** | **0.900** | **1/5 (20%)** | free |
+| score floor 0.60 | 0.500 | 0/34 | one float comparison |
 
-The floor is calibrated, not guessed — 0.60 is the highest threshold refusing no valid
+**Prompting is the largest lever and it is free**, which contradicts what an earlier
+draft of this repo asserted. It pays by over-refusing — one valid question in five,
+including "What port does the query service listen on by default?", which the corpus
+plainly answers. The score floor is weaker and refuses nothing valid.
+
+The floor is calibrated, not guessed: 0.60 is the highest threshold refusing no valid
 question here, and past 0.63 it rejects real questions faster than it catches fakes.
-
-**The five it cannot catch score higher than real questions:** `MAX_CHUNK_BYTES` 0.689,
-`SHARD_REPLICATION_FACTOR` 0.678, against a genuine question at 0.632. That is not a
-tuning failure, it is the method's ceiling — a similarity score measures topical
-closeness, not answerability. Closing the rest requires reading the passages.
+**The five it cannot catch score higher than real questions** — `MAX_CHUNK_BYTES` 0.689,
+`SHARD_REPLICATION_FACTOR` 0.678, against a genuine question at 0.632. That is the
+method's ceiling, not a tuning failure: a similarity score measures topical closeness,
+not answerability.
 
 One finding worth carrying: **the gate reads the dense score even when reranking**,
 because cross-encoder scores separate answerable from unanswerable far worse (lowest
@@ -91,6 +104,9 @@ worth recording.
   the *previous* chunk, so the section body lost its strongest keyword.
 - **Mid-word overlap** — slicing the last N characters produced overlaps starting
   `"rly always retrieval depth"`.
+- **A refusal detector with a gap** — `"not provided"` matched, `"does not provide"`
+  did not, so correct refusals were scored as confabulations and the reported rate
+  was 0.000 instead of 0.300. Regression-tested against the model's real answers.
 - **A lying sweep** — the shortlist sweep showed a perfectly flat curve because
   `run_eval` always requested depth 20 for its rank diagnostic, silently widening any
   smaller shortlist. Fixed with `deep_k`. **The measurement harness is also code.**
@@ -142,8 +158,10 @@ The highest-value work, in order:
 
 1. **Grow the corpus** to a few hundred documents. Everything else is bounded by this.
    Lesson 03's exercise 5 walks through it.
-2. **Measure CRAG's refusal rate properly**, including false refusals on answerable
-   questions. A grader that refuses everything scores perfectly and is useless.
+2. **Measure CRAG's refusal rate**, including false refusals — the strict prompt
+   already reaches 0.900 for free, so CRAG has to beat that *and* justify a model
+   call. It may not. The interesting question is whether it gets there with fewer
+   false refusals than the prompt's 1-in-5.
 3. **Run the cloud profile** — prompt caching, the Citations API and real cost numbers
    are all unexercised. Needs a `VOYAGE_API_KEY`.
 4. **Self-RAG reflection**, if lesson 10's exercise 6 finds a failure mode CRAG misses.

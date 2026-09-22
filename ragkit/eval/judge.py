@@ -22,19 +22,52 @@ from dataclasses import dataclass
 from ragkit.eval.golden import GoldenQuestion
 from ragkit.types import Scored
 
+# Phrasings that mean "I decline to answer from this context".
+#
+# This list is measurement code, and it was wrong once in a way worth recording. The
+# first version had "not provided" but not "does not provide", so answers like
+#
+#     "The passage does not provide any information about the population of Tokyo."
+#
+# were scored as confabulations. That is a *correct refusal* counted as a failure, and
+# it made the reported refusal rate 0.000 when the true rate was higher. A detector
+# gap in the harness is indistinguishable from a model failure in the results table.
+#
+# Matching is substring-based on the lowercased answer, so keep entries short and
+# distinctive; a long phrase fails on trivial wording changes.
 REFUSAL_MARKERS = (
+    # "does/do not <verb>" forms - the most common shape, and the one that was missed
+    "does not provide",
+    "do not provide",
     "does not contain",
-    "not contain enough",
+    "do not contain",
+    "does not mention",
+    "do not mention",
+    "does not specify",
+    "do not specify",
+    "does not say",
+    "does not include",
+    "does not appear",
+    "doesn't provide",
+    "doesn't contain",
+    "doesn't mention",
+    # absence statements
     "no information",
     "not mentioned",
+    "not specified",
+    "not provided",
+    "not contain enough",
+    "not enough information",
+    "no relevant",
+    "nothing in the",
+    "is not present",
+    "not found in",
+    # inability statements
     "cannot answer",
     "can't answer",
-    "not provided",
-    "not specified",
+    "cannot determine",
+    "unable to answer",
     "insufficient",
-    "does not say",
-    "no relevant",
-    "not enough information",
 )
 
 

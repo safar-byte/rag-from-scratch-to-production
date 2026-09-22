@@ -10,14 +10,20 @@ it: refusing safely, caching, citing, costing, and being able to see inside it.
 
 ## Refusing safely
 
-The whole thread that started with lesson 03's **0.000 correct refusal** ends here, with
-two mechanisms that work at different price points:
+The thread that started with lesson 03's refusal failure ends here. Three levers, all
+measured, at different price points:
 
-| Mechanism | Catches | Cost | Where |
-|---|---|---|---|
-| Score floor | ~50% of unanswerable | one float comparison | `generate/abstain.py` |
-| Strict prompt | unmeasured on its own | free | `generate/prompt.py` |
-| CRAG grading | the rest | one model call | `agent/grade.py` |
+| Mechanism | Correct refusal | False refusals | Cost | Where |
+|---|---|---|---|---|
+| default prompt | 0.300 | 0/5 | — | baseline |
+| **strict prompt** | **0.900** | **1/5** | free | `generate/prompt.py` |
+| score floor 0.60 | 0.500 | 0/34 | one comparison | `generate/abstain.py` |
+| CRAG grading | reads the passages | measure it | one model call | `agent/grade.py` |
+
+The strict prompt is the largest lever and it is free — and it over-refuses, declining
+one valid question in five. The score floor is weaker and refuses nothing valid. Pick by
+whether a wrong answer or a missing answer costs you more; both were measured precisely
+so that choice is visible.
 
 The score floor is calibrated, not guessed: **0.60 is the highest threshold that refuses
 no valid question on this corpus**, and past 0.63 it starts rejecting real questions

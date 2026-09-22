@@ -114,12 +114,16 @@ this corpus.
 
 The harness has already reported three things nobody would have chosen to discover:
 
-**The best pipeline confabulates on 100% of unanswerable questions.** It scores R@5 =
-0.987 on retrieval and **0.000 on correct refusal** — asked for the default value of a
-configuration setting that does not exist, it replied "the default value is 1". The
-system prompt already tells it to decline when the context is insufficient. A prompt
-reduces this; it does not fix it. Without that column, lessons 04 and 05 would have read
-as steady progress.
+**The best pipeline invents answers to questions the corpus cannot answer.** It scores
+R@5 = 0.987 on retrieval, and asked for the default value of a configuration setting that
+does not exist, it replied "the default value is 1". Measured refusal rate with the
+default prompt: **0.300**. A strict refusal prompt takes that to **0.900** — free, and by
+over-refusing one valid question in five.
+
+That number was also wrong twice before it was right, which is its own finding: first
+measured over a 3-question sample, then with a detector that matched `"not provided"` but
+not `"does not provide"`, so genuine refusals counted as confabulations. **A gap in the
+measurement code is indistinguishable from a failure in the model.**
 
 **Hybrid search lost to plain dense retrieval** — and reranking then revealed why it was
 still worth building: hybrid is worse as a *ranker* and better as a *candidate pool*

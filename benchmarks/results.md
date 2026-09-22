@@ -12,35 +12,55 @@ The spine of this repo. Every lesson that changes the pipeline appends a row her
 3. Cost and latency sit next to quality. "Better" that costs 40× more is a tradeoff.
 4. Predict the delta before running, and record the surprise when you are wrong.
 
-## 🔴 The most important number in this table is `Refusal = 0.000`
+## 🔴 Refusal: the number that matters, and the correction to it
 
-The best pipeline here scores **R@5 = 0.987** on retrieval and **0.000 on correct
-refusal**. It answered all three unanswerable questions rather than declining:
+The best pipeline scores **R@5 = 0.987** on retrieval. Asked about things the corpus does
+not cover, it invents answers — including a default value for `SHARD_REPLICATION_FACTOR`,
+a setting that exists nowhere:
 
 | Question (nothing in the corpus answers it) | What the system said |
 |---|---|
 | What is the capital of France? | "Paris is the capital of France." |
-| What is the default value of `SHARD_REPLICATION_FACTOR`? | **"The default value ... is 1."** |
-| Which cloud provider does this service run on? | **"AWS (Amazon Web Services)"** |
+| Default value of `SHARD_REPLICATION_FACTOR`? | **"The default value ... is 1."** |
+| Default value of `MAX_CHUNK_BYTES`? | **"is 1024 bytes."** |
+| Which cloud provider? | **"AWS (Amazon Web Services)"** |
 
-The second one is the dangerous one. `SHARD_REPLICATION_FACTOR` does not exist — not in
-the corpus, not in the codebase, nowhere. The system invented a plausible configuration
-default and stated it with the same confidence as the answers it got right. A user
-asking that question in a real support tool would act on it.
+### A correction, because the first number here was wrong
 
-The system prompt explicitly instructs the model to say when the context is
-insufficient. It says so anyway. **That instruction reduces confabulation; it does not
-eliminate it**, which is precisely why refusal is measured rather than assumed.
+This table originally reported **0.000** correct refusal. That figure came from a
+3-question sample, and when the set grew to 10 it was also wrong for a second reason:
+`looks_like_refusal` matched `"not provided"` but not `"does not provide"`, so genuine
+refusals like *"The passage does not provide any information about the population of
+Tokyo"* were scored as confabulations.
 
-Read this row before reading any other row in this table. A pipeline that leads on every
-retrieval metric and scores zero here is not deployable, and no amount of further
-retrieval tuning would have revealed it.
+**A gap in the detector is indistinguishable from a failure in the model** once it
+reaches this table. Fixed, with a regression test naming the exact phrase.
+
+### The measured levers, after the fix
+
+| Lever | Correct refusal | False refusals on answerable | Cost |
+|---|---|---|---|
+| default prompt | 0.300 | 0/5 | — |
+| **strict prompt** | **0.900** | **1/5 (20%)** | free |
+| score floor 0.60 | 0.500 | 0/34 | one float comparison |
+
+Two things worth carrying:
+
+**Prompting is far more effective than this repo first claimed.** An earlier draft said a
+prompt "reduces this; it does not eliminate it". Measured, the strict prompt takes
+refusal from 0.300 to 0.900 — the single largest lever available, and it is free.
+
+**It buys that by over-refusing.** One valid question in five was declined — including
+"What port does the query service listen on by default?", which the corpus plainly
+answers. The score floor is weaker but refuses nothing valid. Which tradeoff is right
+depends entirely on whether a wrong answer or a missing answer costs you more, and the
+only reason that choice is visible at all is that both directions were measured.
 
 ## ⚠️ Read this before trusting any number here
 
-Rows marked **⚠️ ceiling** were produced on a corpus too small to discriminate. At 80
-chunks, retrieving the top 5 means retrieving 6% of everything, and recall sits near 1.0
-for almost any method. A technique showing no gain on such a row has **not been shown to
+Rows marked **⚠️ ceiling** were produced on a corpus too small to discriminate. At 113
+chunks, retrieving the top 5 means retrieving 4% of everything, and recall sits near 1.0
+for almost any method. 17 of the 44 golden questions are saturated at 1.000 outright. A technique showing no gain on such a row has **not been shown to
 be useless** — it has been shown to be untestable at this scale.
 
 This is the most common way RAG benchmarks mislead, including this one. `recall@1` is
@@ -49,8 +69,9 @@ Growing the corpus is tracked in `PROGRESS.md`.
 
 ## Local profile
 
-Corpus: `data/`. Golden set: `ragkit/eval/golden.yaml` (25 questions: 8 lookup,
-9 conceptual, 5 multi-hop, 3 unanswerable). Embeddings BGE-small, generation
+Corpus: `data/` (16 documents, 113 chunks). Golden set: `ragkit/eval/golden.yaml`
+(44 questions: 10 lookup, 9 conceptual, 8 vocabulary-mismatch, 7 multi-hop,
+10 unanswerable). Embeddings BGE-small, generation
 `qwen2.5:1.5b` at temperature 0, reranking `ms-marco-MiniLM-L-6-v2`.
 
 | Run | Retriever | Chunks | R@1 | R@3 | R@5 | MRR | nDCG@5 | Grounded | Relevance | Refusal | ms |
@@ -82,9 +103,14 @@ cited, or reasoned over. If recall is flat and groundedness moves, the change af
 generation, not retrieval — and vice versa. That separation is the entire reason both
 halves are measured rather than one end-to-end score.
 
-**Refusal is the column people forget.** It scores only the three unanswerable
-questions: did the system decline, or confabulate? A pipeline that tops every other
-column and scores 0 here is not deployable.
+**Refusal is the column people forget.** It scores only the unanswerable questions: did
+the system decline, or confabulate? A pipeline that tops every other column and scores
+near zero here is not deployable — and it will not look broken until you measure it.
+
+**The `Refusal 0.000` in the row below is stale.** It was produced against the
+3-question unanswerable set with the buggy detector. The corrected figures are in the
+section at the top of this file; the row is kept rather than edited, because quietly
+rewriting a recorded measurement is exactly the habit this table exists to prevent.
 
 Per-question detail for every run is in `benchmarks/runs/*.json`. The aggregate tells
 you whether something improved; the JSON tells you which questions moved, which is what
