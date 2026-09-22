@@ -48,6 +48,13 @@ python -m ragkit.cli ingest
 python -m ragkit.cli ask "What does the corpus say about retrieval?"
 ```
 
+And for the inspector, which is the best way to see what the pipeline is doing:
+
+```bash
+uvicorn ragkit.api.main:app --port 8000     # terminal 1
+cd ui && npm install && npm run dev         # terminal 2 -> localhost:5173
+```
+
 No `.env` needed — the default profile is local and offline. To switch to the cloud
 path, `cp .env.example .env`, add your keys, and set `RAG_PROFILE=cloud`.
 

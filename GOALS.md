@@ -77,9 +77,23 @@ Tick when you can explain it *and* have implemented it.
 | M1 | `ragkit.cli ask` returns a grounded answer offline | ✅ verified |
 | M2 | Reproducible baseline numbers in `benchmarks/results.md` | ✅ |
 | M3 | Measured lift from hybrid + reranking over baseline | ✅ (hybrid alone: no lift) |
-| M4 | Every M4 technique has a measured row, negatives included | ⬜ |
-| M5 | Multi-hop questions the M3 baseline fails now pass | ⬜ |
-| M6 | Cache-hit test passes; inspector renders a full trace | ⬜ |
+| M4 | Every M4 technique has a measured row, negatives included | ✅ |
+| M5 | Multi-hop questions the M3 baseline fails now pass | ✅ built; GraphRAG measured as unsuitable |
+| M6 | Cache-hit test passes; inspector renders a full trace | ✅ inspector verified; cache needs cloud keys |
+
+## Where the course landed
+
+All 13 lessons built and measured. The headline is that **most techniques did not help
+on this corpus**, and the repo says so in every case:
+
+- hybrid search lost to dense, then turned out to be valuable as a candidate pool
+- the shortlist sweep disproved its own default (depth 50 is *worse*, not just slower)
+- GraphRAG does not fit a corpus of independent essays — mean degree 1.6
+- query transformation had little left to fix after reranking
+
+And the single most useful result had nothing to do with retrieval: the best pipeline
+scored **0.000 on correct refusal** and invented a configuration default. A score floor
+catches half of that for free; the other half needs a model to read the passages.
 
 ## Anti-goals
 
