@@ -105,11 +105,25 @@ task plus the eval delta you should expect).
 whole curriculum reads as one table showing what each technique was actually worth on
 this corpus.
 
-The first thing the harness reported was a problem with itself: 17 of the 25 golden
-questions are **saturated** - perfect recall at every depth - so most techniques in
-later lessons cannot show a measurable gain on this corpus yet. That finding is in the
-table rather than hidden, and rows the harness cannot trust are stamped `⚠️ ceiling`.
-An eval is supposed to tell you uncomfortable things.
+The harness has already reported three things nobody would have chosen to discover:
+
+**The best pipeline confabulates on 100% of unanswerable questions.** It scores R@5 =
+0.987 on retrieval and **0.000 on correct refusal** — asked for the default value of a
+configuration setting that does not exist, it replied "the default value is 1". The
+system prompt already tells it to decline when the context is insufficient. A prompt
+reduces this; it does not fix it. Without that column, lessons 04 and 05 would have read
+as steady progress.
+
+**Hybrid search lost to plain dense retrieval** — and reranking then revealed why it was
+still worth building: hybrid is worse as a *ranker* and better as a *candidate pool*
+feeding a cross-encoder.
+
+**The shortlist sweep overturned its own default.** Depth 10 matches depth 25 at a
+quarter the latency, and depth 50 is *worse*, not just slower.
+
+Most of the golden set is also saturated, so rows the harness cannot trust are stamped
+`⚠️ ceiling` rather than quietly reported. An eval is supposed to tell you uncomfortable
+things.
 
 ## Project state
 

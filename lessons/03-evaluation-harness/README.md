@@ -64,6 +64,31 @@ grounded and completely unresponsive.
 decline, or confabulate? This is the most under-tested behaviour in RAG and the fastest
 way to tell a demo from a deployable system.
 
+### What it caught
+
+The best pipeline in this repo — R@5 = 0.987, top of every retrieval metric — scores
+**0.000** on correct refusal. It answered all three:
+
+| Question (nothing in the corpus answers it) | What it said |
+|---|---|
+| What is the capital of France? | "Paris is the capital of France." |
+| Default value of `SHARD_REPLICATION_FACTOR`? | **"The default value ... is 1."** |
+| Which cloud provider in production? | **"AWS (Amazon Web Services)"** |
+
+The middle one is the one to sit with. `SHARD_REPLICATION_FACTOR` does not exist
+anywhere — it was invented for the golden set precisely because it *sounds* like it
+should. The system produced a plausible default and stated it as confidently as the
+answers it got right.
+
+And the system prompt already says to decline when the context is insufficient. It
+declines anyway roughly never. **A prompt instruction reduces confabulation; it does not
+eliminate it.** That gap is the entire reason this is a measured column and not an
+assumption, and it is why a golden set without unanswerable questions is not finished.
+
+Note what would have happened without this column: every retrieval number improved
+across lessons 04 and 05, the table looked like steady progress, and the system was
+confabulating on 100% of the questions it should have refused the whole time.
+
 ## Two judges, on purpose
 
 `DeterministicJudge` uses lexical overlap and keyword checks. Crude, free, perfectly

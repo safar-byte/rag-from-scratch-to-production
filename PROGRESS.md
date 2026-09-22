@@ -3,9 +3,12 @@
 The authoritative "where am I" file. Pull this repo on any machine, read this file, and
 you have the full context. Update it and commit before ending a session.
 
-**Current position:** M3 complete. Hybrid search did not work as advertised and
-reranking rescued it, both measured. Next up: M4 — query transformation and structural
-retrieval (lessons 06-09).
+**Current position:** M3 complete, generation now verified end to end, and the
+refusal column has produced the most important result in the repo (below).
+
+**Paused here deliberately** so the author can work through lessons 00-05 and their
+exercises before M4 is built. Next up when resuming: M4 - query transformation and
+structural retrieval (lessons 06-09).
 
 ---
 
@@ -189,20 +192,59 @@ diagnostic, so any configured shortlist below 20 was silently widened to 20. Fix
 a `deep_k` parameter that lets a caller switch the diagnostic off. Worth remembering as
 a class of bug - **the measurement harness is also code, and it can lie.**
 
-## Unverified
+## 🔴 Generation verified - and it confabulates on every unanswerable question
 
-**`ragkit ask` has not been run end to end.** Ollama is not installed on this machine,
-so generation is untested on the local profile. Everything up to and including prompt
-assembly is verified; the final model call is not.
+`ragkit ask` now runs end to end. Retrieval-grounded answers are good: "exit status 75
+means the lock was held, check for a stale lock file", read straight out of the corpus.
 
-To close this:
+Then the refusal column landed:
 
-```bash
-# install Ollama, then:
-ollama serve
-ollama pull qwen2.5:7b
-python -m ragkit.cli ask "What is reciprocal rank fusion?"
-```
+| Metric | Score |
+|---|---|
+| groundedness (deterministic proxy) | 0.672 |
+| relevance (deterministic proxy) | 0.649 |
+| **correct_refusal** | **0.000** |
+
+All three unanswerable questions were answered rather than declined:
+
+| Question | Answer given |
+|---|---|
+| Capital of France? | "Paris is the capital of France." |
+| Default of `SHARD_REPLICATION_FACTOR`? | **"The default value ... is 1."** |
+| Which cloud provider? | **"AWS (Amazon Web Services)"** |
+
+`SHARD_REPLICATION_FACTOR` does not exist anywhere. The system invented a plausible
+configuration default and stated it as confidently as the answers it got right. The
+system prompt already instructs it to decline when the context is insufficient.
+
+**This is the single most important result in the repo.** A pipeline topping every
+retrieval metric (R@5 0.987) is not deployable, and no amount of further retrieval work
+would have surfaced it. It is also exactly what the eval-first premise was for: without
+the unanswerable questions, lessons 04 and 05 would have read as steady progress while
+the system confabulated 100% of the time on questions it should have refused.
+
+**What to do about it - the first task of whatever comes next, ahead of M4:**
+
+1. Try a stronger refusal instruction and measure the delta. Expect improvement, not a
+   fix; a prompt reduces this, it does not eliminate it.
+2. Add a retrieval-score threshold: when the best score is below a floor, refuse without
+   calling the model at all. Cheap and much more reliable than asking nicely.
+3. Add a grading step (CRAG, lesson 10) that checks whether retrieved context actually
+   addresses the question before generating.
+4. Grow the unanswerable set well beyond three questions. It is currently the highest
+   value per question in the golden set and the smallest category.
+
+### Environment findings
+
+- **No GPU on this machine.** `qwen3:4b`, a reasoning model, took **over 10 minutes**
+  for one RAG query - it spends ~1000 tokens thinking before writing. `qwen2.5:1.5b`
+  answers in ~30s and is now the default.
+- **A bug that would have poisoned the eval:** Ollama returns a reasoning model's chain
+  of thought in a separate `thinking` field. Budget exhaustion leaves `response` empty
+  with no error, and an empty answer scores as a *refusal* - so a truncation bug would
+  have masqueraded as good refusal behaviour. Now raises, with a regression test.
+- **The CLI pays model load per invocation:** a one-shot `ragkit ask` reports ~40s of
+  "retrieval" that is almost all loading BGE. The eval harness measures ~1s per query.
 
 ## What is next
 

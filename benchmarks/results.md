@@ -12,6 +12,30 @@ The spine of this repo. Every lesson that changes the pipeline appends a row her
 3. Cost and latency sit next to quality. "Better" that costs 40× more is a tradeoff.
 4. Predict the delta before running, and record the surprise when you are wrong.
 
+## 🔴 The most important number in this table is `Refusal = 0.000`
+
+The best pipeline here scores **R@5 = 0.987** on retrieval and **0.000 on correct
+refusal**. It answered all three unanswerable questions rather than declining:
+
+| Question (nothing in the corpus answers it) | What the system said |
+|---|---|
+| What is the capital of France? | "Paris is the capital of France." |
+| What is the default value of `SHARD_REPLICATION_FACTOR`? | **"The default value ... is 1."** |
+| Which cloud provider does this service run on? | **"AWS (Amazon Web Services)"** |
+
+The second one is the dangerous one. `SHARD_REPLICATION_FACTOR` does not exist — not in
+the corpus, not in the codebase, nowhere. The system invented a plausible configuration
+default and stated it with the same confidence as the answers it got right. A user
+asking that question in a real support tool would act on it.
+
+The system prompt explicitly instructs the model to say when the context is
+insufficient. It says so anyway. **That instruction reduces confabulation; it does not
+eliminate it**, which is precisely why refusal is measured rather than assumed.
+
+Read this row before reading any other row in this table. A pipeline that leads on every
+retrieval metric and scores zero here is not deployable, and no amount of further
+retrieval tuning would have revealed it.
+
 ## ⚠️ Read this before trusting any number here
 
 Rows marked **⚠️ ceiling** were produced on a corpus too small to discriminate. At 80
@@ -32,6 +56,7 @@ Corpus: `data/`. Golden set: `ragkit/eval/golden.yaml` (25 questions: 8 lookup,
 | Run | Retriever | Chunks | R@1 | R@3 | R@5 | MRR | nDCG@5 | Grounded | Relevance | Refusal | ms |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 <!-- local-results -->
+| L05 + generation (qwen2.5:1.5b, deterministic judge) | rerank(hybrid(dense+bm25,rrf60),n=10) | 113 | 0.811 | 0.960 | 0.987 | 0.939 | 0.946 | 0.672 | 0.649 | 0.000 | 35513 |
 | L05: rerank, shortlist 10 (swept) | rerank(hybrid(dense+bm25,rrf60),n=10) | 113 | 0.811 | 0.960 | 0.987 | 0.939 | 0.946 | - | - | - | 1613 |
 | L04-05: rerank | rerank(hybrid(dense+bm25,rrf60),n=25) | 113 | 0.811 | 0.960 | 0.987 | 0.939 | 0.946 | - | - | - | 3386 |
 | L04-05: hybrid | hybrid(dense+bm25,rrf60) | 113 | 0.824 | 0.905 | 0.946 | 0.933 | 0.925 | - | - | - | 1048 |
