@@ -159,6 +159,93 @@ questions:
     answer_contains: ["traversal"]
     kind: multi_hop
 
+
+  # ---- vocabulary mismatch -------------------------------------------------
+  # Deliberately phrased the way a user would ask, using words that do NOT appear
+  # in the answering document. This is the category that can actually discriminate
+  # between retrieval methods; the lookup and conceptual questions above are
+  # saturated because they were written from the documents rather than from a user.
+
+  - id: q26
+    question: How do I stop paying for the same tokens over and over again?
+    relevant: [13-caching.md]
+    answer_contains: ["prefix"]
+    kind: vocab_mismatch
+
+  - id: q27
+    question: My scanned paperwork comes back completely blank. What is going on?
+    relevant: [14-document-ingestion.md]
+    answer_contains: ["recognition"]
+    kind: vocab_mismatch
+
+  - id: q28
+    question: Can somebody work out the original wording from the stored numbers?
+    relevant: [15-security.md]
+    answer_contains: ["inversion"]
+    kind: vocab_mismatch
+
+  - id: q29
+    question: My spreadsheets turn into gibberish once they go in. Why?
+    relevant: [14-document-ingestion.md]
+    answer_contains: ["header"]
+    kind: vocab_mismatch
+
+  - id: q30
+    question: The top results are all the same thing said five different ways.
+    relevant: [16-failure-taxonomy.md]
+    answer_contains: ["duplicate"]
+    kind: vocab_mismatch
+
+  - id: q31
+    question: Someone put instructions inside a file and the assistant obeyed them.
+    relevant: [15-security.md]
+    answer_contains: ["injection"]
+    kind: vocab_mismatch
+
+  - id: q32
+    question: It gives the old answer even though I changed the underlying file.
+    relevant: [16-failure-taxonomy.md]
+    answer_contains: ["stale"]
+    kind: vocab_mismatch
+
+  - id: q33
+    question: Giving it more background material somehow made the replies worse.
+    relevant: [16-failure-taxonomy.md]
+    answer_contains: ["dilution"]
+    kind: vocab_mismatch
+
+  # ---- more lookups, over the newer documents ------------------------------
+
+  - id: q34
+    question: What must the invalidation key for an embedding cache include?
+    relevant: [13-caching.md]
+    answer_contains: ["model"]
+    kind: lookup
+
+  - id: q35
+    question: How should code be split for indexing?
+    relevant: [14-document-ingestion.md]
+    answer_contains: ["function"]
+    kind: lookup
+
+  # ---- more multi-hop ------------------------------------------------------
+
+  - id: q36
+    question: >-
+      Permissions must be enforced at retrieval rather than generation. Which filtering
+      approach does that require, and why does the other one fail?
+    relevant: [15-security.md, 10-filtering-and-tenancy.md]
+    answer_contains: ["pre-filter"]
+    kind: multi_hop
+
+  - id: q37
+    question: >-
+      If a chunk was found at rank 40 but the shortlist was 25, which stage is at fault
+      and what does that imply about how deep to over-fetch?
+    relevant: [16-failure-taxonomy.md, 04-reranking.md]
+    answer_contains: ["shortlist"]
+    kind: multi_hop
+
   # ---- unanswerable: the corpus does not contain this ----
   # The single most under-tested behaviour in RAG. A system that scores well on the
   # questions above and confabulates here is not usable.

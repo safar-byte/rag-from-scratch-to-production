@@ -3,8 +3,9 @@
 The authoritative "where am I" file. Pull this repo on any machine, read this file, and
 you have the full context. Update it and commit before ending a session.
 
-**Current position:** M2 complete. The harness runs and has already produced a
-negative result worth acting on. Next up: M3 — hybrid search and reranking (04-05).
+**Current position:** M3 complete. Hybrid search did not work as advertised and
+reranking rescued it, both measured. Next up: M4 — query transformation and structural
+retrieval (lessons 06-09).
 
 ---
 
@@ -15,8 +16,8 @@ negative result worth acting on. Next up: M3 — hybrid search and reranking (04
 | M0 | Foundation: env, provider protocols, corpus, CI | 00 | ✅ done |
 | M1 | Naive RAG end to end, offline | 01–02 | ✅ done (generation unverified) |
 | M2 | Evaluation harness ⭐ | 03 | ✅ done |
-| M3 | Hybrid search + reranking | 04–05 | ⬜ next |
-| M4 | Query transformation + structural retrieval | 06–09 | ⬜ |
+| M3 | Hybrid search + reranking | 04–05 | ✅ done |
+| M4 | Query transformation + structural retrieval | 06–09 | ⬜ next |
 | M5 | Agentic RAG + GraphRAG | 10–11 | ⬜ |
 | M6 | Production hardening + inspector UI | 12 | ⬜ |
 
@@ -112,6 +113,61 @@ Regression tests added for each:
 - 57 tests total, all offline.
 
 **Baseline recorded:** `R@1 0.900 | R@3 0.980 | R@5 0.980 | MRR 1.000 | nDCG@5 0.985`.
+
+**M3 - Hybrid search and reranking**
+
+- Corpus grown again: 16 documents, 113 chunks (caching, ingestion, security, failure
+  taxonomy added). Golden set grown to 37 questions with a new `vocab_mismatch` kind -
+  8 questions phrased the way a user would ask, using words the answering document does
+  not contain. **This is what finally made the benchmark discriminate.**
+- `ragkit/retrieve/bm25.py` - persisted BM25 index over the same chunk list as the
+  vector store, indexing `embed_text` so lesson 07's prefixes will benefit it too.
+- `ragkit/retrieve/hybrid.py` - reciprocal rank fusion, preserving per-retriever ranks.
+- `ragkit/retrieve/rerank.py` - cross-encoder reranking with the over-fetch pattern,
+  recording `rank_before_rerank` so the reranker's contribution is measurable.
+- `RetrievalStrategy` on the pipeline, and `--strategy` on the eval runner, so comparing
+  approaches is a flag rather than a branch.
+- Default local reranker switched to `cross-encoder/ms-marco-MiniLM-L-6-v2` (~90MB)
+  from `bge-reranker-v2-m3` (~2.3GB). A repo people run beats a marginally stronger one
+  they abandon at the download.
+- Lessons 04 and 05, 70 tests total.
+
+### The measured result
+
+| Strategy | R@1 | R@3 | R@5 | nDCG@5 | vocab R@3 | vocab R@5 | ms |
+|---|---|---|---|---|---|---|---|
+| dense | 0.824 | 0.932 | 0.932 | 0.925 | 0.750 | 0.750 | 1078 |
+| bm25 | 0.689 | 0.919 | 0.919 | 0.859 | 0.625 | 0.625 | 1014 |
+| hybrid | 0.824 | 0.905 | 0.946 | 0.925 | 0.625 | 0.750 | 1048 |
+| rerank | 0.811 | 0.960 | 0.987 | 0.946 | 0.875 | 1.000 | 3386 |
+
+**Hybrid search did not beat dense.** Worse at R@3 (0.905 vs 0.932) and worse on the
+vocabulary-mismatch questions it was supposed to help - because RRF weights retrievers
+equally, and BM25 is not neutral on those questions, it is confidently wrong
+(`vocab R@1 = 0.250`).
+
+**Reranking rescued it, and the decisive experiment explains why:**
+
+| Shortlist source | ALL R@5 | vocab R@5 |
+|---|---|---|
+| dense -> rerank | 0.960 | 0.875 |
+| hybrid -> rerank | **0.987** | **1.000** |
+
+Hybrid is worse than dense as a *final ranker* and better as a *candidate pool feeding a
+cross-encoder*. BM25 pulls documents into the top 25 that dense misses, RRF orders them
+badly, and the cross-encoder fixes the order. That is the real argument for hybrid
+retrieval and it is not the one usually given.
+
+Cost: 3.2x latency (1048ms -> 3386ms) for +0.055 R@5. R@1 also dipped slightly
+(0.824 -> 0.811) - reranking is not free at the very top.
+
+### A harness bug found by its own sweep
+
+The first shortlist-depth sweep showed quality perfectly flat from depth 5 to 100, which
+was an artifact, not a finding: `run_eval` always requested depth 20 for its rank
+diagnostic, so any configured shortlist below 20 was silently widened to 20. Fixed with
+a `deep_k` parameter that lets a caller switch the diagnostic off. Worth remembering as
+a class of bug - **the measurement harness is also code, and it can lie.**
 
 ## Unverified
 

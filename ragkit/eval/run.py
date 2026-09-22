@@ -93,9 +93,11 @@ def run_eval(
     use_llm_judge: bool = True,
     limit: int | None = None,
     quiet: bool = False,
+    strategy: str = "dense",
+    deep_k: int | None = None,
 ) -> dict[str, Any]:
     settings = settings or get_settings()
-    pipeline = pipeline or RagPipeline(settings)
+    pipeline = pipeline or RagPipeline(settings, strategy=strategy)
 
     questions = load_golden()
     problems = validate_golden(questions)
@@ -122,7 +124,13 @@ def run_eval(
 
         # Retrieve deeper than top_k so the rank diagnostic can tell "ranked 12" from
         # "absent entirely" — those need opposite responses.
-        deep = pipeline.retrieve(question.question, top_k=max(top_k, 20))
+        #
+        # `deep_k` exists because that convenience is a confound when the thing under
+        # test is shortlist depth: a reranker asked for 20 results must shortlist at
+        # least 20, so a configured shortlist of 5 silently becomes 20 and the sweep
+        # measures nothing. Pass deep_k=top_k to switch the diagnostic off and measure
+        # the pipeline as configured.
+        deep = pipeline.retrieve(question.question, top_k=deep_k or max(top_k, 20))
         ordered_docs = dedupe_to_documents([s.chunk.doc_id for s in deep])
         contexts = deep[:top_k]
 
@@ -213,7 +221,7 @@ def summarise(
             "chunk_overlap": settings.chunk_overlap,
             "chunks_indexed": pipeline.count(),
             "judge": judge_name,
-            "retriever": "dense",
+            "retriever": getattr(pipeline.retriever, "name", "unknown"),
         },
         "retrieval": overall,
         "by_kind": by_kind,
@@ -334,6 +342,12 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Run the RAG evaluation harness.")
     parser.add_argument("--top-k", type=int, default=5)
     parser.add_argument(
+        "--strategy",
+        default="dense",
+        choices=["dense", "bm25", "hybrid", "rerank"],
+        help="Which retrieval strategy to evaluate.",
+    )
+    parser.add_argument(
         "--retrieval-only", action="store_true", help="Skip generation and grading."
     )
     parser.add_argument("--no-llm-judge", action="store_true", help="Use the deterministic grader.")
@@ -345,6 +359,7 @@ def main() -> None:
     args = parser.parse_args()
 
     summary = run_eval(
+        strategy=args.strategy,
         top_k=args.top_k,
         retrieval_only=args.retrieval_only,
         use_llm_judge=not args.no_llm_judge,

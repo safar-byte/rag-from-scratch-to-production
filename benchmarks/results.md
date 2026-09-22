@@ -32,6 +32,10 @@ Corpus: `data/`. Golden set: `ragkit/eval/golden.yaml` (25 questions: 8 lookup,
 | Run | Retriever | Chunks | R@1 | R@3 | R@5 | MRR | nDCG@5 | Grounded | Relevance | Refusal | ms |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 <!-- local-results -->
+| L04-05: rerank | rerank(hybrid(dense+bm25,rrf60),n=25) | 113 | 0.811 | 0.960 | 0.987 | 0.939 | 0.946 | - | - | - | 3386 |
+| L04-05: hybrid | hybrid(dense+bm25,rrf60) | 113 | 0.824 | 0.905 | 0.946 | 0.933 | 0.925 | - | - | - | 1048 |
+| L04-05: bm25 | bm25 | 113 | 0.689 | 0.919 | 0.919 | 0.857 | 0.859 | - | - | - | 1014 |
+| M3 baseline: dense only, 113 chunks, 37 questions | dense | 113 | 0.824 | 0.932 | 0.932 | 0.940 | 0.925 | - | - | - | 1078 |
 | M2 baseline: dense only, recursive 512/64 | dense | 80 | 0.900 | 0.980 | 0.980 | 1.000 | 0.985 | - | - | - | 2431 |
 
 ## Cloud profile

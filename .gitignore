@@ -17,6 +17,7 @@ venv/
 
 # rag artifacts (rebuildable from data/ — never commit an index)
 .chroma/
+.bm25/
 .indexes/
 *.duckdb
 *.sqlite3

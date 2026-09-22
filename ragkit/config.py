@@ -46,7 +46,13 @@ class Settings(BaseSettings):
     local_embedding_model: str = Field(
         default="BAAI/bge-small-en-v1.5", alias="LOCAL_EMBEDDING_MODEL"
     )
-    local_rerank_model: str = Field(default="BAAI/bge-reranker-v2-m3", alias="LOCAL_RERANK_MODEL")
+    # MiniLM rather than a BGE reranker: ~90MB and fast on CPU, against ~2.3GB for
+    # bge-reranker-v2-m3. A teaching repo people actually run beats a marginally
+    # stronger one they abandon at the download. Swap it in .env for the stronger
+    # model and measure whether the size is worth it on your corpus.
+    local_rerank_model: str = Field(
+        default="cross-encoder/ms-marco-MiniLM-L-6-v2", alias="LOCAL_RERANK_MODEL"
+    )
 
     # ---- cloud backend ------------------------------------------------------
     anthropic_api_key: str | None = Field(default=None, alias="ANTHROPIC_API_KEY")
