@@ -1,0 +1,12 @@
+# Python 3.12 on purpose: this machine's system Python is 3.14, which most of the
+# ML wheels in this project (torch, sentence-transformers) do not publish for yet.
+#
+#   conda env create -f environment.yml
+#   conda activate rag
+#   pip install -e ".[dev]"
+name: rag
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - pip

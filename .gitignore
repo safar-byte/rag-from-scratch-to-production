@@ -1,0 +1,39 @@
+# secrets
+.env
+.env.local
+
+# python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# rag artifacts (rebuildable from data/ — never commit an index)
+.chroma/
+.indexes/
+*.duckdb
+*.sqlite3
+
+# model weights / caches
+.cache/
+models/
+*.gguf
+*.safetensors
+
+# node
+node_modules/
+ui/dist/
+ui/.vite/
+
+# os / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
