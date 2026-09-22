@@ -161,6 +161,26 @@ retrieval and it is not the one usually given.
 Cost: 3.2x latency (1048ms -> 3386ms) for +0.055 R@5. R@1 also dipped slightly
 (0.824 -> 0.811) - reranking is not free at the very top.
 
+### The shortlist sweep overturned the default
+
+| depth | R@1 | R@3 | R@5 | nDCG@5 | vocab R@5 | ms |
+|---|---|---|---|---|---|---|
+| 3 | **0.838** | 0.960 | 0.973 | 0.946 | 0.875 | 258 |
+| 5 | **0.838** | 0.960 | 0.973 | 0.946 | 0.875 | 263 |
+| **10** | 0.811 | 0.960 | **0.987** | 0.946 | **1.000** | 466 |
+| 25 | 0.811 | 0.960 | 0.987 | 0.944 | 1.000 | 1828 |
+| 50 | 0.811 | 0.960 | 0.960 | 0.932 | 0.875 | 2831 |
+
+`rerank_candidates` default changed 25 -> **10**: identical quality at a quarter of the
+latency. Depth 50 is *worse*, not just slower - a small cross-encoder given more
+distractors makes more mistakes, so "deeper is monotonically safe" is false. And shallow
+depths have the best R@1 (0.838), because fewer candidates means fewer chances to demote
+a correct top result. There is no single best depth, only a best depth for the k you
+serve.
+
+Caveat worth keeping: 37 questions on 113 chunks, so adjacent rows differ by one or two
+questions. Port the sweep, not the number 10.
+
 ### A harness bug found by its own sweep
 
 The first shortlist-depth sweep showed quality perfectly flat from depth 5 to 100, which

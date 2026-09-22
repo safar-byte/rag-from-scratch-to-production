@@ -78,16 +78,56 @@ the cross-encoder occasionally demotes a correct rank-1 result. It buys a large 
 k=3 and k=5 for a small loss at k=1. If your application shows exactly one passage, that
 trade is bad. Measure the k you actually use.
 
-## Over-fetch depth
+## Over-fetch depth — the sweep that changed the default
 
-`rerank_candidates` in `config.py` (default 25) is the shortlist depth, and it is the
-dial that matters:
+`rerank_candidates` is the shortlist depth. The received wisdom is 25, and "deeper is at
+least as good, just slower". Both turn out to be wrong here.
 
-- Too shallow and the ceiling binds — the reranker cannot find what retrieval missed.
-- Too deep and cost grows linearly while quality flattens. A hosted reranker bills per
-  document scored, so doubling the shortlist doubles that bill.
+```
+| depth |   R@1 |   R@3 |   R@5 | nDCG@5 | vocab R@5 | ms/query |
+|     3 | 0.838 | 0.960 | 0.973 |  0.946 |     0.875 |      258 |
+|     5 | 0.838 | 0.960 | 0.973 |  0.946 |     0.875 |      263 |
+|    10 | 0.811 | 0.960 | 0.987 |  0.946 |     1.000 |      466 |
+|    25 | 0.811 | 0.960 | 0.987 |  0.944 |     1.000 |     1828 |
+|    50 | 0.811 | 0.960 | 0.960 |  0.932 |     0.875 |     2831 |
+```
 
-Do not take 25 on faith. `run.py --sweep` measures it.
+Three things, none of them obvious:
+
+**Depth 10 is the whole win.** It matches depth 25 exactly — R@5 0.987, vocab R@5 1.000 —
+at roughly a quarter of the latency. The default in `config.py` is now 10, on this
+evidence rather than on convention.
+
+**Depth 50 is worse.** Not slower-but-equal: *worse*, R@5 0.987 → 0.960 and vocab
+1.000 → 0.875. A small cross-encoder handed more distractors makes more mistakes, and
+some of those mistakes push a correct passage out of the top 5. The intuition that a
+deeper shortlist is monotonically safe is simply false, and this is why the rule is
+"recall at shortlist depth is a *ceiling*", not "a deeper shortlist is better".
+
+**Shallow depths have the best R@1** (0.838 vs 0.811). With fewer candidates there are
+fewer chances to demote the correct rank-1 result. If your application shows exactly one
+passage, the right depth here is 3, not 10.
+
+So there is no single best depth — there is a best depth *for the k you actually serve*.
+
+### A caution about this table
+
+These numbers come from 37 questions on a 113-chunk corpus, and the differences between
+adjacent rows are one or two questions changing. Do not port the number 10 to your own
+corpus; port the sweep. The first version of this sweep was also silently broken — see
+below.
+
+### The sweep that lied
+
+The first run of this sweep showed quality perfectly flat from depth 5 to 100. That was
+not a finding, it was a bug in the harness: `run_eval` always requested depth 20 for its
+rank diagnostic, so any shortlist configured below 20 was silently widened to 20 and the
+small depths all measured the same pipeline.
+
+`run_eval` now takes `deep_k` to switch the diagnostic off. Worth remembering as a class
+of bug rather than an incident — **the measurement harness is also code, and it can lie
+to you with a perfectly plausible table.** The tell was that the result was too clean: a
+genuinely flat curve across a 20× range should have prompted suspicion, not a conclusion.
 
 ## Exercise
 

@@ -73,9 +73,13 @@ class Settings(BaseSettings):
     chunk_size: int = 512
     chunk_overlap: int = 64
     top_k: int = 5
-    # Over-fetch before reranking: the reranker can only reorder what retrieval found,
-    # so recall at this depth is the ceiling on final quality (see lesson 05).
-    rerank_candidates: int = 25
+    # Over-fetch depth before reranking. 10 rather than the conventional 25 because
+    # lesson 05's sweep measured it on this corpus: depth 10 matches depth 25 exactly
+    # (R@5 0.987, vocab R@5 1.000) at a quarter of the latency, and depth 50 is
+    # actively WORSE (R@5 0.960) - a small cross-encoder given more distractors makes
+    # more mistakes. More candidates is not monotonically better. Re-sweep this on
+    # your own corpus; it is the single most corpus-dependent number in this file.
+    rerank_candidates: int = 10
 
     def require_cloud_keys(self) -> None:
         """Fail loudly and early rather than deep inside an HTTP call."""

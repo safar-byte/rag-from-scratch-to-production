@@ -32,6 +32,7 @@ Corpus: `data/`. Golden set: `ragkit/eval/golden.yaml` (25 questions: 8 lookup,
 | Run | Retriever | Chunks | R@1 | R@3 | R@5 | MRR | nDCG@5 | Grounded | Relevance | Refusal | ms |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 <!-- local-results -->
+| L05: rerank, shortlist 10 (swept) | rerank(hybrid(dense+bm25,rrf60),n=10) | 113 | 0.811 | 0.960 | 0.987 | 0.939 | 0.946 | - | - | - | 1613 |
 | L04-05: rerank | rerank(hybrid(dense+bm25,rrf60),n=25) | 113 | 0.811 | 0.960 | 0.987 | 0.939 | 0.946 | - | - | - | 3386 |
 | L04-05: hybrid | hybrid(dense+bm25,rrf60) | 113 | 0.824 | 0.905 | 0.946 | 0.933 | 0.925 | - | - | - | 1048 |
 | L04-05: bm25 | bm25 | 113 | 0.689 | 0.919 | 0.919 | 0.857 | 0.859 | - | - | - | 1014 |
