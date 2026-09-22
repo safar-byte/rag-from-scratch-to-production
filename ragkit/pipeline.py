@@ -10,6 +10,10 @@ what the technique changed.
     bm25     lesson 04   lexical only, for comparison
     hybrid   lesson 04   dense + bm25 fused with RRF
     rerank   lesson 05   hybrid shortlist, reordered by a cross-encoder
+    parent   lesson 08   rerank, then expand each hit to its surrounding window
+    router   lesson 09   per-query choice between lexical and semantic
+
+`transform` is orthogonal and wraps whichever strategy is selected (lesson 06).
 
 Comparing them is a flag rather than a branch, which is what makes
 `benchmarks/results.md` a table of measurements rather than a table of anecdotes.
@@ -23,11 +27,19 @@ from pathlib import Path
 from typing import Any
 
 from ragkit.config import Settings, get_settings
-from ragkit.generate import generate_answer
+from ragkit.generate import abstain, generate_answer
 from ragkit.ingest import RecursiveChunker, chunk_documents, load_documents
 from ragkit.ingest.chunker import Chunker
 from ragkit.providers import get_embedder, get_generator, get_reranker
-from ragkit.retrieve import Bm25Index, Bm25Retriever, DenseRetriever, HybridRetriever
+from ragkit.query import TRANSFORMERS, TransformingRetriever
+from ragkit.retrieve import (
+    Bm25Index,
+    Bm25Retriever,
+    DenseRetriever,
+    HeuristicRouter,
+    HybridRetriever,
+    ParentDocumentRetriever,
+)
 from ragkit.retrieve.rerank import RerankingRetriever
 from ragkit.store import get_store
 from ragkit.types import Answer, Scored
@@ -38,6 +50,8 @@ class RetrievalStrategy(StrEnum):
     BM25 = "bm25"
     HYBRID = "hybrid"
     RERANK = "rerank"
+    PARENT = "parent"
+    ROUTER = "router"
 
 
 class RagPipeline:
@@ -52,9 +66,21 @@ class RagPipeline:
         self,
         settings: Settings | None = None,
         strategy: RetrievalStrategy | str = RetrievalStrategy.DENSE,
+        *,
+        score_floor: float | None = None,
+        strict_prompt: bool = False,
+        transform: str = "identity",
+        parent_window: int = 600,
     ) -> None:
         self.settings = settings or get_settings()
         self.strategy = RetrievalStrategy(strategy)
+        # Both refusal levers are off by default so lesson 03 measures them rather than
+        # the repo assuming they work. `score_floor=None` disables the gate entirely.
+        self.score_floor = score_floor
+        self.strict_prompt = strict_prompt
+        self.transform = transform
+        self.parent_window = parent_window
+        self._documents: list[Any] | None = None
         self._store = get_store(self.settings)
         self._bm25 = Bm25Index(self.settings.chroma_path.parent / ".bm25")
         self._embedder: Any = None
@@ -89,6 +115,23 @@ class RagPipeline:
         return self._retriever
 
     def _build_retriever(self) -> Any:
+        base = self._build_base_retriever()
+        if self.transform == "identity":
+            return base
+
+        transformer_cls = TRANSFORMERS.get(self.transform)
+        if transformer_cls is None:
+            raise ValueError(
+                f"Unknown transform {self.transform!r}. Options: {sorted(TRANSFORMERS)}"
+            )
+        transformer = (
+            transformer_cls()
+            if transformer_cls is TRANSFORMERS["identity"]
+            else transformer_cls(self.generator)
+        )
+        return TransformingRetriever(base, transformer, candidates=self.settings.rerank_candidates)
+
+    def _build_base_retriever(self) -> Any:
         dense = DenseRetriever(self._store, self.embedder)
         if self.strategy is RetrievalStrategy.DENSE:
             return dense
@@ -97,15 +140,41 @@ class RagPipeline:
         if self.strategy is RetrievalStrategy.BM25:
             return lexical
 
+        if self.strategy is RetrievalStrategy.ROUTER:
+            # Lexical queries go to BM25 alone; everything else takes the full
+            # reranked path. Motivated directly by lesson 04's measurement, where
+            # equal-weight fusion let BM25 damage vocabulary-mismatch questions.
+            semantic = RerankingRetriever(
+                HybridRetriever([dense, lexical], candidates=self.settings.rerank_candidates),
+                self.reranker,
+                candidates=self.settings.rerank_candidates,
+            )
+            return HeuristicRouter(lexical, semantic)
+
         hybrid = HybridRetriever([dense, lexical], candidates=self.settings.rerank_candidates)
         if self.strategy is RetrievalStrategy.HYBRID:
             return hybrid
 
-        return RerankingRetriever(hybrid, self.reranker, candidates=self.settings.rerank_candidates)
+        reranked = RerankingRetriever(
+            hybrid, self.reranker, candidates=self.settings.rerank_candidates
+        )
+        if self.strategy is RetrievalStrategy.RERANK:
+            return reranked
 
-    def set_strategy(self, strategy: RetrievalStrategy | str) -> None:
+        return ParentDocumentRetriever(reranked, self.documents, window=self.parent_window)
+
+    @property
+    def documents(self) -> list[Any]:
+        """Source documents, loaded once. Parent expansion slices them directly."""
+        if self._documents is None:
+            self._documents = load_documents()
+        return self._documents
+
+    def set_strategy(self, strategy: RetrievalStrategy | str, transform: str | None = None) -> None:
         """Switch strategy, reusing the loaded models. Used by the lesson sweeps."""
         self.strategy = RetrievalStrategy(strategy)
+        if transform is not None:
+            self.transform = transform
         self._retriever = None
 
     # ---- ingest -------------------------------------------------------------
@@ -166,7 +235,21 @@ class RagPipeline:
         results = self.retrieve(question, top_k=top_k)
         retrieval_ms = (time.perf_counter() - started) * 1000
 
-        answer = generate_answer(question, results, self.generator)
+        # The abstention gate runs before generation, not after. Refusing here costs one
+        # float comparison; letting the model see context it cannot answer from is how
+        # you get "the default value is 1" for a setting that does not exist.
+        if self.score_floor is not None:
+            decision = abstain.decide(results, floor=self.score_floor)
+            if decision.abstain:
+                answer = abstain.refusal_answer(decision, results)
+                answer.trace["retrieval_ms"] = round(retrieval_ms, 1)
+                answer.trace["retriever"] = self.retriever.name
+                answer.trace["strategy"] = self.strategy.value
+                answer.trace["profile"] = self.settings.profile.value
+                answer.trace["total_ms"] = round((time.perf_counter() - started) * 1000, 1)
+                return answer
+
+        answer = generate_answer(question, results, self.generator, strict=self.strict_prompt)
         answer.trace["retrieval_ms"] = round(retrieval_ms, 1)
         answer.trace["retriever"] = self.retriever.name
         answer.trace["strategy"] = self.strategy.value

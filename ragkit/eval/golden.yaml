@@ -266,3 +266,51 @@ questions:
     relevant: []
     answer_contains: []
     kind: unanswerable
+
+  # Seven more, because three was far too few to measure a refusal rate against.
+  # Deliberately graded by difficulty: the first few are plainly off-topic, the last
+  # few are the dangerous kind - they use the corpus's own vocabulary and describe
+  # settings and behaviours that sound like they ought to exist.
+
+  - id: q38
+    question: What is the population of Tokyo?
+    relevant: []
+    answer_contains: []
+    kind: unanswerable
+
+  - id: q39
+    question: Who wrote this documentation and when were they hired?
+    relevant: []
+    answer_contains: []
+    kind: unanswerable
+
+  - id: q40
+    question: What is the monthly bill for running this service?
+    relevant: []
+    answer_contains: []
+    kind: unanswerable
+
+  - id: q41
+    question: What is the default value of MAX_CHUNK_BYTES?
+    relevant: []
+    answer_contains: []
+    kind: unanswerable
+
+  - id: q42
+    question: How many retries does the indexer attempt before giving up?
+    relevant: []
+    answer_contains: []
+    kind: unanswerable
+
+  - id: q43
+    question: Which embedding model does this system use in production?
+    relevant: []
+    answer_contains: []
+    kind: unanswerable
+
+  - id: q44
+    question: What is the p99 query latency target in the service level objective?
+    relevant: []
+    answer_contains: []
+    kind: unanswerable
+

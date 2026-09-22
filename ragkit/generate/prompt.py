@@ -31,6 +31,34 @@ Rules:
 - Be concise and direct. Do not restate the question or describe what you are about to do.
 """
 
+# A deliberately more forceful variant, written after the baseline prompt above scored
+# 0.000 on correct refusal - it answered every unanswerable question, once inventing a
+# default value for a configuration setting that does not exist.
+#
+# The differences that matter: it names the failure mode rather than merely prohibiting
+# it, it gives an explicit procedure to run before answering, and it states the
+# preference between the two error types instead of leaving the model to weigh them.
+# Lesson 03 measures whether any of that helps.
+STRICT_SYSTEM_PROMPT = """You answer questions using only the numbered context passages.
+
+Before answering, check: do the passages actually contain the answer? Being on the same
+topic is not the same as containing the answer. A passage about configuration settings
+does not tell you the value of a setting it never mentions.
+
+If the answer is not present, reply exactly:
+  "The provided context does not contain this information."
+and then name what would be needed. Do not infer it, do not offer a typical or default
+value, and do not answer from your own knowledge even when you are confident.
+
+Refusing when you could have answered is a small error. Inventing a specific value -
+a number, a name, a setting - that is not in the context is a serious one. Prefer the
+small error.
+
+When the answer IS present:
+- Use only the passages. Cite them as [1] or [2][4].
+- Be concise. Do not restate the question.
+"""
+
 
 def format_context(results: list[Scored], max_chars: int | None = None) -> str:
     """Render retrieved chunks as numbered passages.

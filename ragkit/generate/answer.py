@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 import time
 
-from ragkit.generate.prompt import SYSTEM_PROMPT, build_prompt
+from ragkit.generate.prompt import STRICT_SYSTEM_PROMPT, SYSTEM_PROMPT, build_prompt
 from ragkit.providers.base import Generator
 from ragkit.types import Answer, Citation, Scored
 
@@ -50,11 +50,19 @@ def generate_answer(
     *,
     max_tokens: int = 1024,
     max_context_chars: int | None = None,
+    strict: bool = False,
 ) -> Answer:
+    """Generate an answer over the retrieved context.
+
+    `strict=True` swaps in the more forceful refusal prompt. It is a separate flag
+    rather than the default so that lesson 03 can measure what the wording is actually
+    worth, instead of the repo quietly assuming it helps.
+    """
     prompt = build_prompt(question, results, max_context_chars=max_context_chars)
+    system = STRICT_SYSTEM_PROMPT if strict else SYSTEM_PROMPT
 
     started = time.perf_counter()
-    text, usage = generator.generate(system=SYSTEM_PROMPT, prompt=prompt, max_tokens=max_tokens)
+    text, usage = generator.generate(system=system, prompt=prompt, max_tokens=max_tokens)
     elapsed_ms = (time.perf_counter() - started) * 1000
 
     return Answer(
@@ -64,6 +72,7 @@ def generate_answer(
         usage=usage,
         trace={
             "generator": generator.name,
+            "strict_prompt": strict,
             "generation_ms": round(elapsed_ms, 1),
             "prompt_chars": len(prompt),
             "n_contexts": len(results),

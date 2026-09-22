@@ -95,9 +95,18 @@ def run_eval(
     quiet: bool = False,
     strategy: str = "dense",
     deep_k: int | None = None,
+    score_floor: float | None = None,
+    strict_prompt: bool = False,
+    transform: str = "identity",
 ) -> dict[str, Any]:
     settings = settings or get_settings()
-    pipeline = pipeline or RagPipeline(settings, strategy=strategy)
+    pipeline = pipeline or RagPipeline(
+        settings,
+        strategy=strategy,
+        score_floor=score_floor,
+        strict_prompt=strict_prompt,
+        transform=transform,
+    )
 
     questions = load_golden()
     problems = validate_golden(questions)
@@ -145,9 +154,21 @@ def run_eval(
         )
 
         if not retrieval_only:
-            from ragkit.generate import generate_answer
+            from ragkit.generate import abstain, generate_answer
 
-            answer = generate_answer(question.question, contexts, pipeline.generator)
+            # Apply the same abstention gate the pipeline would, so the refusal metric
+            # measures the deployed behaviour rather than generation in isolation.
+            floor = getattr(pipeline, "score_floor", None)
+            decision = abstain.decide(contexts, floor=floor) if floor is not None else None
+            if decision is not None and decision.abstain:
+                answer = abstain.refusal_answer(decision, contexts)
+            else:
+                answer = generate_answer(
+                    question.question,
+                    contexts,
+                    pipeline.generator,
+                    strict=getattr(pipeline, "strict_prompt", False),
+                )
             grade: Grade = judge.grade(question, answer.text, contexts)
             result.answer = answer.text
             result.grade = asdict(grade)
@@ -344,7 +365,7 @@ def main() -> None:
     parser.add_argument(
         "--strategy",
         default="dense",
-        choices=["dense", "bm25", "hybrid", "rerank"],
+        choices=["dense", "bm25", "hybrid", "rerank", "parent", "router"],
         help="Which retrieval strategy to evaluate.",
     )
     parser.add_argument(
@@ -352,6 +373,21 @@ def main() -> None:
     )
     parser.add_argument("--no-llm-judge", action="store_true", help="Use the deterministic grader.")
     parser.add_argument("--limit", type=int, default=None, help="Only run the first N questions.")
+    parser.add_argument(
+        "--transform",
+        default="identity",
+        choices=["identity", "rewrite", "hyde", "multiquery", "stepback"],
+        help="Query transformation to apply before retrieval.",
+    )
+    parser.add_argument(
+        "--score-floor",
+        type=float,
+        default=None,
+        help="Refuse without calling the model when the best dense score is below this.",
+    )
+    parser.add_argument(
+        "--strict-prompt", action="store_true", help="Use the forceful refusal prompt."
+    )
     parser.add_argument("--label", default="", help="Label for the results.md row.")
     parser.add_argument(
         "--write", action="store_true", help="Append a row to benchmarks/results.md."
@@ -360,6 +396,9 @@ def main() -> None:
 
     summary = run_eval(
         strategy=args.strategy,
+        transform=args.transform,
+        score_floor=args.score_floor,
+        strict_prompt=args.strict_prompt,
         top_k=args.top_k,
         retrieval_only=args.retrieval_only,
         use_llm_judge=not args.no_llm_judge,
