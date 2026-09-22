@@ -1,0 +1,838 @@
+{
+  "label": "M2 baseline: dense only, recursive 512/64",
+  "config": {
+    "profile": "local",
+    "top_k": 5,
+    "chunk_size": 512,
+    "chunk_overlap": 64,
+    "chunks_indexed": 80,
+    "judge": "none",
+    "retriever": "dense"
+  },
+  "retrieval": {
+    "recall@1": 0.9,
+    "precision@1": 0.88,
+    "ndcg@1": 1.0,
+    "recall@3": 0.98,
+    "precision@3": 0.3467,
+    "ndcg@3": 0.9845,
+    "recall@5": 0.98,
+    "precision@5": 0.208,
+    "ndcg@5": 0.9845,
+    "mrr": 1.0
+  },
+  "by_kind": {
+    "conceptual": {
+      "recall@1": 1.0,
+      "precision@1": 1.0,
+      "ndcg@1": 1.0,
+      "recall@3": 1.0,
+      "precision@3": 0.3333,
+      "ndcg@3": 1.0,
+      "recall@5": 1.0,
+      "precision@5": 0.2,
+      "ndcg@5": 1.0,
+      "mrr": 1.0,
+      "n": 9,
+      "max_recall@1": 1.0
+    },
+    "lookup": {
+      "recall@1": 1.0,
+      "precision@1": 1.0,
+      "ndcg@1": 1.0,
+      "recall@3": 1.0,
+      "precision@3": 0.3333,
+      "ndcg@3": 1.0,
+      "recall@5": 1.0,
+      "precision@5": 0.2,
+      "ndcg@5": 1.0,
+      "mrr": 1.0,
+      "n": 8,
+      "max_recall@1": 1.0
+    },
+    "multi_hop": {
+      "recall@1": 0.5,
+      "precision@1": 1.0,
+      "ndcg@1": 1.0,
+      "recall@3": 0.9,
+      "precision@3": 0.6,
+      "ndcg@3": 0.9226,
+      "recall@5": 0.9,
+      "precision@5": 0.36,
+      "ndcg@5": 0.9226,
+      "mrr": 1.0,
+      "n": 5,
+      "max_recall@1": 0.5
+    },
+    "unanswerable": {
+      "recall@1": 1.0,
+      "precision@1": 0.0,
+      "ndcg@1": 1.0,
+      "recall@3": 1.0,
+      "precision@3": 0.0,
+      "ndcg@3": 1.0,
+      "recall@5": 1.0,
+      "precision@5": 0.0,
+      "ndcg@5": 1.0,
+      "mrr": 1.0,
+      "n": 3,
+      "max_recall@1": 1.0
+    }
+  },
+  "generation": {},
+  "ceiling_reached": false,
+  "mean_latency_ms": 2430.6,
+  "total_cost_usd": 0.0,
+  "results": [
+    {
+      "id": "q01",
+      "kind": "lookup",
+      "question": "What port does the query service listen on by default?",
+      "retrieved": [
+        "07-operations.md",
+        "09-query-understanding.md",
+        "10-filtering-and-tenancy.md",
+        "11-observability.md",
+        "08-vector-indexes.md"
+      ],
+      "first_relevant_rank": 1,
+      "n_relevant": 1,
+      "retrieval": {
+        "recall@1": 1.0,
+        "precision@1": 1.0,
+        "ndcg@1": 1.0,
+        "recall@3": 1.0,
+        "precision@3": 0.3333333333333333,
+        "ndcg@3": 1.0,
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "ndcg@5": 1.0,
+        "mrr": 1.0
+      },
+      "answer": "",
+      "grade": {},
+      "latency_ms": 57892.7,
+      "cost_usd": 0.0
+    },
+    {
+      "id": "q02",
+      "kind": "lookup",
+      "question": "What does exit status 75 from the indexer mean?",
+      "retrieved": [
+        "07-operations.md",
+        "09-query-understanding.md",
+        "05-contextual-retrieval.md",
+        "11-observability.md",
+        "08-vector-indexes.md"
+      ],
+      "first_relevant_rank": 1,
+      "n_relevant": 1,
+      "retrieval": {
+        "recall@1": 1.0,
+        "precision@1": 1.0,
+        "ndcg@1": 1.0,
+        "recall@3": 1.0,
+        "precision@3": 0.3333333333333333,
+        "ndcg@3": 1.0,
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "ndcg@5": 1.0,
+        "mrr": 1.0
+      },
+      "answer": "",
+      "grade": {},
+      "latency_ms": 101.0,
+      "cost_usd": 0.0
+    },
+    {
+      "id": "q03",
+      "kind": "lookup",
+      "question": "What is the default value of RETRIEVAL_FANOUT?",
+      "retrieved": [
+        "07-operations.md",
+        "09-query-understanding.md",
+        "03-hybrid-search.md",
+        "06-evaluation.md",
+        "12-cost-and-latency.md"
+      ],
+      "first_relevant_rank": 1,
+      "n_relevant": 1,
+      "retrieval": {
+        "recall@1": 1.0,
+        "precision@1": 1.0,
+        "ndcg@1": 1.0,
+        "recall@3": 1.0,
+        "precision@3": 0.3333333333333333,
+        "ndcg@3": 1.0,
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "ndcg@5": 1.0,
+        "mrr": 1.0
+      },
+      "answer": "",
+      "grade": {},
+      "latency_ms": 101.4,
+      "cost_usd": 0.0
+    },
+    {
+      "id": "q04",
+      "kind": "lookup",
+      "question": "What constant is conventionally used in reciprocal rank fusion?",
+      "retrieved": [
+        "03-hybrid-search.md",
+        "07-operations.md",
+        "06-evaluation.md",
+        "11-observability.md",
+        "04-reranking.md"
+      ],
+      "first_relevant_rank": 1,
+      "n_relevant": 1,
+      "retrieval": {
+        "recall@1": 1.0,
+        "precision@1": 1.0,
+        "ndcg@1": 1.0,
+        "recall@3": 1.0,
+        "precision@3": 0.3333333333333333,
+        "ndcg@3": 1.0,
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "ndcg@5": 1.0,
+        "mrr": 1.0
+      },
+      "answer": "",
+      "grade": {},
+      "latency_ms": 105.9,
+      "cost_usd": 0.0
+    },
+    {
+      "id": "q05",
+      "kind": "lookup",
+      "question": "What does the b parameter in BM25 control, and what is its default?",
+      "retrieved": [
+        "03-hybrid-search.md",
+        "05-contextual-retrieval.md",
+        "08-vector-indexes.md",
+        "07-operations.md",
+        "01-embeddings.md"
+      ],
+      "first_relevant_rank": 1,
+      "n_relevant": 1,
+      "retrieval": {
+        "recall@1": 1.0,
+        "precision@1": 1.0,
+        "ndcg@1": 1.0,
+        "recall@3": 1.0,
+        "precision@3": 0.3333333333333333,
+        "ndcg@3": 1.0,
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "ndcg@5": 1.0,
+        "mrr": 1.0
+      },
+      "answer": "",
+      "grade": {},
+      "latency_ms": 104.5,
+      "cost_usd": 0.0
+    },
+    {
+      "id": "q06",
+      "kind": "lookup",
+      "question": "How many dimensions does BGE-small produce?",
+      "retrieved": [
+        "01-embeddings.md",
+        "04-reranking.md",
+        "11-observability.md",
+        "08-vector-indexes.md",
+        "12-cost-and-latency.md"
+      ],
+      "first_relevant_rank": 1,
+      "n_relevant": 1,
+      "retrieval": {
+        "recall@1": 1.0,
+        "precision@1": 1.0,
+        "ndcg@1": 1.0,
+        "recall@3": 1.0,
+        "precision@3": 0.3333333333333333,
+        "ndcg@3": 1.0,
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "ndcg@5": 1.0,
+        "mrr": 1.0
+      },
+      "answer": "",
+      "grade": {},
+      "latency_ms": 104.1,
+      "cost_usd": 0.0
+    },
+    {
+      "id": "q07",
+      "kind": "lookup",
+      "question": "What is a typical range for the M parameter in an HNSW index?",
+      "retrieved": [
+        "08-vector-indexes.md",
+        "03-hybrid-search.md",
+        "12-cost-and-latency.md",
+        "06-evaluation.md",
+        "11-observability.md"
+      ],
+      "first_relevant_rank": 1,
+      "n_relevant": 1,
+      "retrieval": {
+        "recall@1": 1.0,
+        "precision@1": 1.0,
+        "ndcg@1": 1.0,
+        "recall@3": 1.0,
+        "precision@3": 0.3333333333333333,
+        "ndcg@3": 1.0,
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "ndcg@5": 1.0,
+        "mrr": 1.0
+      },
+      "answer": "",
+      "grade": {},
+      "latency_ms": 111.6,
+      "cost_usd": 0.0
+    },
+    {
+      "id": "q08",
+      "kind": "lookup",
+      "question": "Below roughly how many vectors is a flat index still the right choice?",
+      "retrieved": [
+        "08-vector-indexes.md",
+        "01-embeddings.md",
+        "12-cost-and-latency.md",
+        "10-filtering-and-tenancy.md",
+        "02-chunking.md"
+      ],
+      "first_relevant_rank": 1,
+      "n_relevant": 1,
+      "retrieval": {
+        "recall@1": 1.0,
+        "precision@1": 1.0,
+        "ndcg@1": 1.0,
+        "recall@3": 1.0,
+        "precision@3": 0.3333333333333333,
+        "ndcg@3": 1.0,
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "ndcg@5": 1.0,
+        "mrr": 1.0
+      },
+      "answer": "",
+      "grade": {},
+      "latency_ms": 108.7,
+      "cost_usd": 0.0
+    },
+    {
+      "id": "q09",
+      "kind": "conceptual",
+      "question": "Why can a reranker not fix poor retrieval recall?",
+      "retrieved": [
+        "04-reranking.md",
+        "09-query-understanding.md",
+        "07-operations.md",
+        "11-observability.md",
+        "12-cost-and-latency.md"
+      ],
+      "first_relevant_rank": 1,
+      "n_relevant": 1,
+      "retrieval": {
+        "recall@1": 1.0,
+        "precision@1": 1.0,
+        "ndcg@1": 1.0,
+        "recall@3": 1.0,
+        "precision@3": 0.3333333333333333,
+        "ndcg@3": 1.0,
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "ndcg@5": 1.0,
+        "mrr": 1.0
+      },
+      "answer": "",
+      "grade": {},
+      "latency_ms": 101.5,
+      "cost_usd": 0.0
+    },
+    {
+      "id": "q10",
+      "kind": "conceptual",
+      "question": "Why does reciprocal rank fusion use ranks instead of scores?",
+      "retrieved": [
+        "03-hybrid-search.md",
+        "07-operations.md",
+        "06-evaluation.md",
+        "11-observability.md",
+        "09-query-understanding.md"
+      ],
+      "first_relevant_rank": 1,
+      "n_relevant": 1,
+      "retrieval": {
+        "recall@1": 1.0,
+        "precision@1": 1.0,
+        "ndcg@1": 1.0,
+        "recall@3": 1.0,
+        "precision@3": 0.3333333333333333,
+        "ndcg@3": 1.0,
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "ndcg@5": 1.0,
+        "mrr": 1.0
+      },
+      "answer": "",
+      "grade": {},
+      "latency_ms": 99.0,
+      "cost_usd": 0.0
+    },
+    {
+      "id": "q11",
+      "kind": "conceptual",
+      "question": "What is the difference between a bi-encoder and a cross-encoder?",
+      "retrieved": [
+        "04-reranking.md",
+        "12-cost-and-latency.md",
+        "01-embeddings.md",
+        "03-hybrid-search.md",
+        "10-filtering-and-tenancy.md"
+      ],
+      "first_relevant_rank": 1,
+      "n_relevant": 1,
+      "retrieval": {
+        "recall@1": 1.0,
+        "precision@1": 1.0,
+        "ndcg@1": 1.0,
+        "recall@3": 1.0,
+        "precision@3": 0.3333333333333333,
+        "ndcg@3": 1.0,
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "ndcg@5": 1.0,
+        "mrr": 1.0
+      },
+      "answer": "",
+      "grade": {},
+      "latency_ms": 235.1,
+      "cost_usd": 0.0
+    },
+    {
+      "id": "q12",
+      "kind": "conceptual",
+      "question": "Why do small chunks retrieve more precisely but answer worse?",
+      "retrieved": [
+        "02-chunking.md",
+        "04-reranking.md",
+        "11-observability.md",
+        "01-embeddings.md",
+        "05-contextual-retrieval.md"
+      ],
+      "first_relevant_rank": 1,
+      "n_relevant": 1,
+      "retrieval": {
+        "recall@1": 1.0,
+        "precision@1": 1.0,
+        "ndcg@1": 1.0,
+        "recall@3": 1.0,
+        "precision@3": 0.3333333333333333,
+        "ndcg@3": 1.0,
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "ndcg@5": 1.0,
+        "mrr": 1.0
+      },
+      "answer": "",
+      "grade": {},
+      "latency_ms": 99.2,
+      "cost_usd": 0.0
+    },
+    {
+      "id": "q13",
+      "kind": "conceptual",
+      "question": "What problem does contextual retrieval solve?",
+      "retrieved": [
+        "05-contextual-retrieval.md",
+        "09-query-understanding.md",
+        "02-chunking.md",
+        "11-observability.md",
+        "01-embeddings.md"
+      ],
+      "first_relevant_rank": 1,
+      "n_relevant": 1,
+      "retrieval": {
+        "recall@1": 1.0,
+        "precision@1": 1.0,
+        "ndcg@1": 1.0,
+        "recall@3": 1.0,
+        "precision@3": 0.3333333333333333,
+        "ndcg@3": 1.0,
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "ndcg@5": 1.0,
+        "mrr": 1.0
+      },
+      "answer": "",
+      "grade": {},
+      "latency_ms": 93.7,
+      "cost_usd": 0.0
+    },
+    {
+      "id": "q14",
+      "kind": "conceptual",
+      "question": "Why is a post-filter usually the wrong way to enforce tenant isolation?",
+      "retrieved": [
+        "10-filtering-and-tenancy.md",
+        "12-cost-and-latency.md",
+        "09-query-understanding.md",
+        "07-operations.md",
+        "11-observability.md"
+      ],
+      "first_relevant_rank": 1,
+      "n_relevant": 1,
+      "retrieval": {
+        "recall@1": 1.0,
+        "precision@1": 1.0,
+        "ndcg@1": 1.0,
+        "recall@3": 1.0,
+        "precision@3": 0.3333333333333333,
+        "ndcg@3": 1.0,
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "ndcg@5": 1.0,
+        "mrr": 1.0
+      },
+      "answer": "",
+      "grade": {},
+      "latency_ms": 125.1,
+      "cost_usd": 0.0
+    },
+    {
+      "id": "q15",
+      "kind": "conceptual",
+      "question": "When is HyDE actively harmful?",
+      "retrieved": [
+        "09-query-understanding.md",
+        "08-vector-indexes.md",
+        "10-filtering-and-tenancy.md",
+        "12-cost-and-latency.md",
+        "06-evaluation.md"
+      ],
+      "first_relevant_rank": 1,
+      "n_relevant": 1,
+      "retrieval": {
+        "recall@1": 1.0,
+        "precision@1": 1.0,
+        "ndcg@1": 1.0,
+        "recall@3": 1.0,
+        "precision@3": 0.3333333333333333,
+        "ndcg@3": 1.0,
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "ndcg@5": 1.0,
+        "mrr": 1.0
+      },
+      "answer": "",
+      "grade": {},
+      "latency_ms": 155.7,
+      "cost_usd": 0.0
+    },
+    {
+      "id": "q16",
+      "kind": "conceptual",
+      "question": "Why does optimising vector search rarely improve perceived latency?",
+      "retrieved": [
+        "12-cost-and-latency.md",
+        "08-vector-indexes.md",
+        "09-query-understanding.md",
+        "06-evaluation.md",
+        "04-reranking.md"
+      ],
+      "first_relevant_rank": 1,
+      "n_relevant": 1,
+      "retrieval": {
+        "recall@1": 1.0,
+        "precision@1": 1.0,
+        "ndcg@1": 1.0,
+        "recall@3": 1.0,
+        "precision@3": 0.3333333333333333,
+        "ndcg@3": 1.0,
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "ndcg@5": 1.0,
+        "mrr": 1.0
+      },
+      "answer": "",
+      "grade": {},
+      "latency_ms": 97.8,
+      "cost_usd": 0.0
+    },
+    {
+      "id": "q17",
+      "kind": "conceptual",
+      "question": "What does groundedness measure, and how does it differ from answer relevance?",
+      "retrieved": [
+        "06-evaluation.md",
+        "11-observability.md",
+        "03-hybrid-search.md",
+        "10-filtering-and-tenancy.md",
+        "09-query-understanding.md"
+      ],
+      "first_relevant_rank": 1,
+      "n_relevant": 1,
+      "retrieval": {
+        "recall@1": 1.0,
+        "precision@1": 1.0,
+        "ndcg@1": 1.0,
+        "recall@3": 1.0,
+        "precision@3": 0.3333333333333333,
+        "ndcg@3": 1.0,
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "ndcg@5": 1.0,
+        "mrr": 1.0
+      },
+      "answer": "",
+      "grade": {},
+      "latency_ms": 97.9,
+      "cost_usd": 0.0
+    },
+    {
+      "id": "q18",
+      "kind": "multi_hop",
+      "question": "Dense retrieval fails on error codes. Which retrieval method fixes that, and why does it work where embeddings do not?",
+      "retrieved": [
+        "01-embeddings.md",
+        "11-observability.md",
+        "02-chunking.md",
+        "09-query-understanding.md",
+        "07-operations.md"
+      ],
+      "first_relevant_rank": 1,
+      "n_relevant": 2,
+      "retrieval": {
+        "recall@1": 0.5,
+        "precision@1": 1.0,
+        "ndcg@1": 1.0,
+        "recall@3": 0.5,
+        "precision@3": 0.3333333333333333,
+        "ndcg@3": 0.6131471927654584,
+        "recall@5": 0.5,
+        "precision@5": 0.2,
+        "ndcg@5": 0.6131471927654584,
+        "mrr": 1.0
+      },
+      "answer": "",
+      "grade": {},
+      "latency_ms": 111.2,
+      "cost_usd": 0.0
+    },
+    {
+      "id": "q19",
+      "kind": "multi_hop",
+      "question": "If reranking cost scales with shortlist depth, and recall at that depth caps final quality, how should shortlist depth be chosen?",
+      "retrieved": [
+        "04-reranking.md",
+        "12-cost-and-latency.md",
+        "11-observability.md",
+        "08-vector-indexes.md",
+        "06-evaluation.md"
+      ],
+      "first_relevant_rank": 1,
+      "n_relevant": 2,
+      "retrieval": {
+        "recall@1": 0.5,
+        "precision@1": 1.0,
+        "ndcg@1": 1.0,
+        "recall@3": 1.0,
+        "precision@3": 0.6666666666666666,
+        "ndcg@3": 1.0,
+        "recall@5": 1.0,
+        "precision@5": 0.4,
+        "ndcg@5": 1.0,
+        "mrr": 1.0
+      },
+      "answer": "",
+      "grade": {},
+      "latency_ms": 118.0,
+      "cost_usd": 0.0
+    },
+    {
+      "id": "q20",
+      "kind": "multi_hop",
+      "question": "Contextual retrieval re-sends the document once per chunk. Which two mechanisms make that affordable, and why is the batch one acceptable here?",
+      "retrieved": [
+        "12-cost-and-latency.md",
+        "05-contextual-retrieval.md",
+        "02-chunking.md",
+        "11-observability.md",
+        "04-reranking.md"
+      ],
+      "first_relevant_rank": 1,
+      "n_relevant": 2,
+      "retrieval": {
+        "recall@1": 0.5,
+        "precision@1": 1.0,
+        "ndcg@1": 1.0,
+        "recall@3": 1.0,
+        "precision@3": 0.6666666666666666,
+        "ndcg@3": 1.0,
+        "recall@5": 1.0,
+        "precision@5": 0.4,
+        "ndcg@5": 1.0,
+        "mrr": 1.0
+      },
+      "answer": "",
+      "grade": {},
+      "latency_ms": 112.7,
+      "cost_usd": 0.0
+    },
+    {
+      "id": "q21",
+      "kind": "multi_hop",
+      "question": "All top-1 scores collapse after a reindex. What is the likely cause, and what property of embeddings explains why nothing raises an error?",
+      "retrieved": [
+        "11-observability.md",
+        "01-embeddings.md",
+        "02-chunking.md",
+        "10-filtering-and-tenancy.md",
+        "04-reranking.md"
+      ],
+      "first_relevant_rank": 1,
+      "n_relevant": 2,
+      "retrieval": {
+        "recall@1": 0.5,
+        "precision@1": 1.0,
+        "ndcg@1": 1.0,
+        "recall@3": 1.0,
+        "precision@3": 0.6666666666666666,
+        "ndcg@3": 1.0,
+        "recall@5": 1.0,
+        "precision@5": 0.4,
+        "ndcg@5": 1.0,
+        "mrr": 1.0
+      },
+      "answer": "",
+      "grade": {},
+      "latency_ms": 170.8,
+      "cost_usd": 0.0
+    },
+    {
+      "id": "q22",
+      "kind": "multi_hop",
+      "question": "Why does a highly selective metadata filter undermine an approximate index, and what does that imply about HNSW graph traversal?",
+      "retrieved": [
+        "08-vector-indexes.md",
+        "10-filtering-and-tenancy.md",
+        "01-embeddings.md",
+        "12-cost-and-latency.md",
+        "11-observability.md"
+      ],
+      "first_relevant_rank": 1,
+      "n_relevant": 2,
+      "retrieval": {
+        "recall@1": 0.5,
+        "precision@1": 1.0,
+        "ndcg@1": 1.0,
+        "recall@3": 1.0,
+        "precision@3": 0.6666666666666666,
+        "ndcg@3": 1.0,
+        "recall@5": 1.0,
+        "precision@5": 0.4,
+        "ndcg@5": 1.0,
+        "mrr": 1.0
+      },
+      "answer": "",
+      "grade": {},
+      "latency_ms": 128.9,
+      "cost_usd": 0.0
+    },
+    {
+      "id": "q23",
+      "kind": "unanswerable",
+      "question": "What is the capital of France?",
+      "retrieved": [
+        "08-vector-indexes.md",
+        "10-filtering-and-tenancy.md",
+        "03-hybrid-search.md",
+        "05-contextual-retrieval.md",
+        "01-embeddings.md"
+      ],
+      "first_relevant_rank": null,
+      "n_relevant": 0,
+      "retrieval": {
+        "recall@1": 1.0,
+        "precision@1": 0.0,
+        "ndcg@1": 1.0,
+        "recall@3": 1.0,
+        "precision@3": 0.0,
+        "ndcg@3": 1.0,
+        "recall@5": 1.0,
+        "precision@5": 0.0,
+        "ndcg@5": 1.0,
+        "mrr": 1.0
+      },
+      "answer": "",
+      "grade": {},
+      "latency_ms": 99.9,
+      "cost_usd": 0.0
+    },
+    {
+      "id": "q24",
+      "kind": "unanswerable",
+      "question": "What is the default value of the SHARD_REPLICATION_FACTOR setting?",
+      "retrieved": [
+        "03-hybrid-search.md",
+        "07-operations.md",
+        "08-vector-indexes.md",
+        "06-evaluation.md",
+        "12-cost-and-latency.md"
+      ],
+      "first_relevant_rank": null,
+      "n_relevant": 0,
+      "retrieval": {
+        "recall@1": 1.0,
+        "precision@1": 0.0,
+        "ndcg@1": 1.0,
+        "recall@3": 1.0,
+        "precision@3": 0.0,
+        "ndcg@3": 1.0,
+        "recall@5": 1.0,
+        "precision@5": 0.0,
+        "ndcg@5": 1.0,
+        "mrr": 1.0
+      },
+      "answer": "",
+      "grade": {},
+      "latency_ms": 183.9,
+      "cost_usd": 0.0
+    },
+    {
+      "id": "q25",
+      "kind": "unanswerable",
+      "question": "Which cloud provider does this service run on in production?",
+      "retrieved": [
+        "07-operations.md",
+        "12-cost-and-latency.md",
+        "05-contextual-retrieval.md",
+        "10-filtering-and-tenancy.md",
+        "11-observability.md"
+      ],
+      "first_relevant_rank": null,
+      "n_relevant": 0,
+      "retrieval": {
+        "recall@1": 1.0,
+        "precision@1": 0.0,
+        "ndcg@1": 1.0,
+        "recall@3": 1.0,
+        "precision@3": 0.0,
+        "ndcg@3": 1.0,
+        "recall@5": 1.0,
+        "precision@5": 0.0,
+        "ndcg@5": 1.0,
+        "mrr": 1.0
+      },
+      "answer": "",
+      "grade": {},
+      "latency_ms": 103.8,
+      "cost_usd": 0.0
+    }
+  ]
+}

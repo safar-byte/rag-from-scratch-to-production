@@ -75,7 +75,7 @@ Tick when you can explain it *and* have implemented it.
 |---|---|---|
 | M0 | `pytest` green on a clean clone, no API keys | ✅ |
 | M1 | `ragkit.cli ask` returns a grounded answer offline | 🟡 pipeline done, needs Ollama |
-| M2 | Reproducible baseline numbers in `benchmarks/results.md` | ⬜ |
+| M2 | Reproducible baseline numbers in `benchmarks/results.md` | ✅ |
 | M3 | Measured lift from hybrid + reranking over baseline | ⬜ |
 | M4 | Every M4 technique has a measured row, negatives included | ⬜ |
 | M5 | Multi-hop questions the M3 baseline fails now pass | ⬜ |

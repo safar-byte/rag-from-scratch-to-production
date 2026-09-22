@@ -97,7 +97,13 @@ task plus the eval delta you should expect).
 
 `benchmarks/results.md` is the spine of this repo. Every lesson appends a row, so the
 whole curriculum reads as one table showing what each technique was actually worth on
-this corpus. Numbers appear there as milestones land.
+this corpus.
+
+The first thing the harness reported was a problem with itself: 17 of the 25 golden
+questions are **saturated** - perfect recall at every depth - so most techniques in
+later lessons cannot show a measurable gain on this corpus yet. That finding is in the
+table rather than hidden, and rows the harness cannot trust are stamped `⚠️ ceiling`.
+An eval is supposed to tell you uncomfortable things.
 
 ## Project state
 

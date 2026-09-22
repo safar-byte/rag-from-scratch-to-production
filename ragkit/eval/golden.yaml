@@ -1,0 +1,181 @@
+# Golden evaluation set.
+#
+# Each question names the document(s) that genuinely answer it. Relevance is judged at
+# DOCUMENT level, not chunk level, on purpose: chunk ids change every time chunk_size
+# changes, so a chunk-level golden set silently invalidates itself the moment you tune
+# chunking — which is exactly the experiment you most want to run. Document ids are
+# stable across every chunking configuration.
+#
+# `answer_contains` lists strings that a correct answer should mention. It supports a
+# cheap deterministic check that needs no model, which keeps the harness runnable when
+# Ollama is not installed and gives the LLM judge something to be validated against.
+#
+# `kind` groups questions so the report can break scores down by question type. A mean
+# over mixed question types hides exactly the failures worth finding.
+
+questions:
+  # ---- lookup: the answer is a specific value stated in one place ----
+  - id: q01
+    question: What port does the query service listen on by default?
+    relevant: [07-operations.md]
+    answer_contains: ["8788"]
+    kind: lookup
+
+  - id: q02
+    question: What does exit status 75 from the indexer mean?
+    relevant: [07-operations.md]
+    answer_contains: ["lock"]
+    kind: lookup
+
+  - id: q03
+    question: What is the default value of RETRIEVAL_FANOUT?
+    relevant: [07-operations.md]
+    answer_contains: ["25"]
+    kind: lookup
+
+  - id: q04
+    question: What constant is conventionally used in reciprocal rank fusion?
+    relevant: [03-hybrid-search.md]
+    answer_contains: ["60"]
+    kind: lookup
+
+  - id: q05
+    question: What does the b parameter in BM25 control, and what is its default?
+    relevant: [03-hybrid-search.md]
+    answer_contains: ["length", "0.75"]
+    kind: lookup
+
+  - id: q06
+    question: How many dimensions does BGE-small produce?
+    relevant: [01-embeddings.md]
+    answer_contains: ["384"]
+    kind: lookup
+
+  - id: q07
+    question: What is a typical range for the M parameter in an HNSW index?
+    relevant: [08-vector-indexes.md]
+    answer_contains: ["16", "64"]
+    kind: lookup
+
+  - id: q08
+    question: Below roughly how many vectors is a flat index still the right choice?
+    relevant: [08-vector-indexes.md]
+    answer_contains: ["50,000"]
+    kind: lookup
+
+  # ---- conceptual: the answer is an explanation ----
+  - id: q09
+    question: Why can a reranker not fix poor retrieval recall?
+    relevant: [04-reranking.md]
+    answer_contains: ["reorder"]
+    kind: conceptual
+
+  - id: q10
+    question: Why does reciprocal rank fusion use ranks instead of scores?
+    relevant: [03-hybrid-search.md]
+    answer_contains: ["comparable"]
+    kind: conceptual
+
+  - id: q11
+    question: What is the difference between a bi-encoder and a cross-encoder?
+    relevant: [04-reranking.md]
+    answer_contains: ["together"]
+    kind: conceptual
+
+  - id: q12
+    question: Why do small chunks retrieve more precisely but answer worse?
+    relevant: [02-chunking.md]
+    answer_contains: ["context"]
+    kind: conceptual
+
+  - id: q13
+    question: What problem does contextual retrieval solve?
+    relevant: [05-contextual-retrieval.md]
+    answer_contains: ["document"]
+    kind: conceptual
+
+  - id: q14
+    question: Why is a post-filter usually the wrong way to enforce tenant isolation?
+    relevant: [10-filtering-and-tenancy.md]
+    answer_contains: ["selective"]
+    kind: conceptual
+
+  - id: q15
+    question: When is HyDE actively harmful?
+    relevant: [09-query-understanding.md]
+    answer_contains: ["hallucinat"]
+    kind: conceptual
+
+  - id: q16
+    question: Why does optimising vector search rarely improve perceived latency?
+    relevant: [12-cost-and-latency.md]
+    answer_contains: ["generation"]
+    kind: conceptual
+
+  - id: q17
+    question: What does groundedness measure, and how does it differ from answer relevance?
+    relevant: [06-evaluation.md]
+    answer_contains: ["supported"]
+    kind: conceptual
+
+  # ---- multi-hop: needs two or more documents ----
+  - id: q18
+    question: >-
+      Dense retrieval fails on error codes. Which retrieval method fixes that,
+      and why does it work where embeddings do not?
+    relevant: [01-embeddings.md, 03-hybrid-search.md]
+    answer_contains: ["BM25"]
+    kind: multi_hop
+
+  - id: q19
+    question: >-
+      If reranking cost scales with shortlist depth, and recall at that depth caps
+      final quality, how should shortlist depth be chosen?
+    relevant: [04-reranking.md, 12-cost-and-latency.md]
+    answer_contains: ["measure"]
+    kind: multi_hop
+
+  - id: q20
+    question: >-
+      Contextual retrieval re-sends the document once per chunk. Which two mechanisms
+      make that affordable, and why is the batch one acceptable here?
+    relevant: [05-contextual-retrieval.md, 12-cost-and-latency.md]
+    answer_contains: ["caching", "batch"]
+    kind: multi_hop
+
+  - id: q21
+    question: >-
+      All top-1 scores collapse after a reindex. What is the likely cause, and what
+      property of embeddings explains why nothing raises an error?
+    relevant: [11-observability.md, 01-embeddings.md]
+    answer_contains: ["model"]
+    kind: multi_hop
+
+  - id: q22
+    question: >-
+      Why does a highly selective metadata filter undermine an approximate index,
+      and what does that imply about HNSW graph traversal?
+    relevant: [10-filtering-and-tenancy.md, 08-vector-indexes.md]
+    answer_contains: ["traversal"]
+    kind: multi_hop
+
+  # ---- unanswerable: the corpus does not contain this ----
+  # The single most under-tested behaviour in RAG. A system that scores well on the
+  # questions above and confabulates here is not usable.
+  - id: q23
+    question: What is the capital of France?
+    relevant: []
+    answer_contains: []
+    kind: unanswerable
+
+  - id: q24
+    question: What is the default value of the SHARD_REPLICATION_FACTOR setting?
+    relevant: []
+    answer_contains: []
+    kind: unanswerable
+
+  - id: q25
+    question: Which cloud provider does this service run on in production?
+    relevant: []
+    answer_contains: []
+    kind: unanswerable

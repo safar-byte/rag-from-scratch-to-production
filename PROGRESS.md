@@ -3,8 +3,8 @@
 The authoritative "where am I" file. Pull this repo on any machine, read this file, and
 you have the full context. Update it and commit before ending a session.
 
-**Current position:** M1 complete except for one unverified step (see below).
-Next up: M2 — the evaluation harness, lesson 03.
+**Current position:** M2 complete. The harness runs and has already produced a
+negative result worth acting on. Next up: M3 — hybrid search and reranking (04-05).
 
 ---
 
@@ -14,49 +14,45 @@ Next up: M2 — the evaluation harness, lesson 03.
 |---|---|---|---|
 | M0 | Foundation: env, provider protocols, corpus, CI | 00 | ✅ done |
 | M1 | Naive RAG end to end, offline | 01–02 | ✅ done (generation unverified) |
-| M2 | Evaluation harness ⭐ | 03 | ⬜ next |
-| M3 | Hybrid search + reranking | 04–05 | ⬜ |
+| M2 | Evaluation harness ⭐ | 03 | ✅ done |
+| M3 | Hybrid search + reranking | 04–05 | ⬜ next |
 | M4 | Query transformation + structural retrieval | 06–09 | ⬜ |
 | M5 | Agentic RAG + GraphRAG | 10–11 | ⬜ |
 | M6 | Production hardening + inspector UI | 12 | ⬜ |
 
-## ⚠️ The thing to deal with first in M2
+## ⚠️ The measurement problem, now measured
 
-**The corpus is too small to measure anything.** It is 7 documents and 41 chunks.
-Retrieving the top 5 means retrieving 12% of the entire corpus, so every method looks
-excellent and nothing discriminates between them.
+M2 started by attacking this rather than by writing metric code, and the corpus grew
+from 7 documents / 41 chunks to **12 documents / 80 chunks**. It was not enough, and now
+there are numbers saying so:
 
-Measured during lesson 01: the chunk holding the answer ranks **#1** for every
-identifier query tried, including ones deliberately designed to defeat dense retrieval:
+| kind | n | recall@1 | recall@3 | recall@5 | max R@1 |
+|---|---|---|---|---|---|
+| conceptual | 9 | 1.000 | 1.000 | 1.000 | 1.000 |
+| lookup | 8 | 1.000 | 1.000 | 1.000 | 1.000 |
+| multi_hop | 5 | 0.500 | **0.900** | 0.900 | 0.500 |
+| unanswerable | 3 | 1.000 | 1.000 | 1.000 | 1.000 |
 
-| Query | Rank of the answering chunk |
-|---|---|
-| What is error code TX-4491? | 1 |
-| What does exit status 75 mean? | 1 |
-| What is `FUSION_CONSTANT` set to? | 1 |
-| Which port does the query service use? | 1 |
+**17 of 25 questions are saturated.** Lookup and conceptual are perfect at every depth,
+so no technique in lessons 04-11 can show a gain on them.
 
-`data/07-operations.md` was added specifically to provide identifiers used in passing,
-in prose that is not about identifiers — the case dense retrieval genuinely struggles
-with. It still ranks 1, because of the corpus size, not because the problem is not real.
+**multi_hop recall@1 = 0.500 is a perfect score, not a failure.** A question with two
+relevant documents caps at 0.5 at k=1 by arithmetic. The harness now prints a
+`max R@1` column and colours a score green when it is at its cap, because that row gets
+misread otherwise. This was nearly recorded as a retrieval problem.
 
-This is a **ceiling effect**, and it threatens the premise of the whole repo: if
-recall@5 is already at 1.0, lessons 04 and 05 cannot show a lift, and "measure every
-technique" becomes theatre.
+**`multi_hop recall@3 = 0.900` is the only unsaturated number in the table** - one
+question of five misses one of its two documents at depth 3. That is the entire
+measurable headroom available to M3.
 
-**So M2 has to start by fixing it, not by writing metric code.** Options, in rough order
-of preference:
+The harness now detects this itself: it warns on saturation, and `benchmarks/results.md`
+stamps `⚠️ ceiling` on rows it cannot trust.
 
-1. Grow the corpus to a few hundred chunks — enough that top-5 is a genuinely selective
-   ask. Needs roughly 30–50 documents rather than 7. Could be written, or assembled from
-   a permissively licensed technical corpus.
-2. Report metrics at k=1 and k=3 as well as k=5, which is more discriminating at any
-   corpus size, and worth doing regardless.
-3. Add deliberately adversarial distractor documents — near-duplicates and documents
-   that discuss the same terms in a different sense.
-
-Do (2) unconditionally. (1) is the real fix. Until the corpus grows, **treat every
-number in `benchmarks/results.md` as provisional** and say so in the table.
+**What M3 must do about it.** Hybrid search and reranking cannot be evaluated on 25
+questions where 17 are saturated. Before drawing any conclusion in lesson 04-05, grow the
+corpus to roughly 40+ documents and add golden questions that target vocabulary mismatch
+(ask in words the document does not use). Lesson 03's exercise 6 asks the reader to do
+exactly this, and it is not busywork - it is the precondition for M3 meaning anything.
 
 ## What is done
 
@@ -96,6 +92,27 @@ Regression tests added for each:
 - *Mid-word overlap.* Slicing the last N characters produced overlaps starting
   `"rly always retrieval depth"`. Fixed by `_tail_words`.
 
+**M2 - Evaluation**
+
+- Corpus grown to 12 documents / 80 chunks (added vector indexes, query understanding,
+  filtering and tenancy, observability, cost and latency).
+- `ragkit/eval/golden.yaml` - 25 questions across four kinds, relevance judged at
+  **document** level so the set survives a change to `chunk_size`.
+- `ragkit/eval/metrics.py` - recall@k, precision@k, MRR, nDCG@k, plus a
+  `rank_of_first_relevant` diagnostic that separates "ranked 12" from "absent".
+  Tested against hand-computed arithmetic.
+- `ragkit/eval/judge.py` - an LLM judge and a deterministic one. Both, on purpose: the
+  only way to know whether to trust a judge is to compare it against something that
+  cannot have opinions.
+- `ragkit/eval/run.py` - the runner, with saturation detection and the `max R@1` cap
+  column.
+- `ragkit/eval/report.py` - appends to `benchmarks/results.md` and writes per-question
+  JSON to `benchmarks/runs/`.
+- Lesson 03 with README and exercise.
+- 57 tests total, all offline.
+
+**Baseline recorded:** `R@1 0.900 | R@3 0.980 | R@5 0.980 | MRR 1.000 | nDCG@5 0.985`.
+
 ## Unverified
 
 **`ragkit ask` has not been run end to end.** Ollama is not installed on this machine,
@@ -113,12 +130,19 @@ python -m ragkit.cli ask "What is reciprocal rank fusion?"
 
 ## What is next
 
-**M2 — the evaluation harness (lesson 03).** In order: fix the ceiling problem above,
-then build the golden set, then retrieval metrics (recall@k, precision@k, MRR, nDCG@k),
-then generation metrics (groundedness, answer relevance) with an LLM judge and a
-deterministic fallback, then the report writer that appends to `benchmarks/results.md`.
+**M3 - hybrid search and reranking (lessons 04-05).** BM25 via `bm25s`, reciprocal rank
+fusion, then cross-encoder reranking over an over-fetched shortlist.
 
-*Exit criteria:* baseline numbers for M1 committed and identical across two runs.
+*Do first:* grow the corpus and add vocabulary-mismatch questions, per the section above.
+Measuring hybrid search against a saturated benchmark produces a confident "no
+improvement" that is a fact about the corpus, not about hybrid search.
+
+*Hypothesis to test:* the one failing multi-hop question should be the one that hybrid
+search fixes, since multi-hop questions span documents that may share no vocabulary with
+the query.
+
+*Exit criteria:* a measured lift over the M2 baseline on the unsaturated questions, with
+the deltas discussed in each lesson README.
 
 ## Open questions
 
