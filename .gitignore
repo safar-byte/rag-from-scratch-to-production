@@ -38,3 +38,5 @@ ui/.vite/
 Thumbs.db
 .idea/
 .vscode/
+ui/dist/
+ui/node_modules/
