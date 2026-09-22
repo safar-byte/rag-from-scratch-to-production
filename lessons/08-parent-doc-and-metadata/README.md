@@ -38,17 +38,33 @@ expand into two nearly identical windows. Returning both wastes context budget a
 pushes a genuinely different passage out of the top k — the opposite of the intent.
 Deduplication matters more here than anywhere else in the pipeline.
 
-## What to expect
+## What it measured — and the prediction that was wrong
 
-Parent expansion changes what the *generator* sees, not what retrieval *finds*. So
-document-level recall should be roughly unchanged — the same documents are retrieved —
-while answer quality may improve because each passage arrives with its surroundings.
+The prediction in an earlier draft of this lesson: *"document-level recall should be
+roughly unchanged — the same documents are retrieved — while answer quality may improve."*
 
-That makes this one of the few lessons where **the retrieval metrics are the wrong place
-to look.** If recall moves much either way, something is wrong: expansion should be
-adding context to hits, not changing which documents are hit. The number to watch is
-groundedness, and the cost is context budget — a 600-character window on five hits is
-3,000 characters of prompt, before anything else.
+Measured:
+
+| Pipeline | R@1 | R@3 | R@5 | nDCG@5 |
+|---|---|---|---|---|
+| rerank | 0.811 | 0.960 | 0.987 | 0.946 |
+| **parent** | **0.841** | **0.966** | **0.989** | **0.953** |
+
+Recall went *up*, by 0.030 at R@1. The prediction was wrong, and the mechanism is worth
+more than the gain.
+
+**Merging overlapping windows deduplicates same-document hits.** When two chunks of one
+document expand into overlapping windows, they collapse into a single result — which
+frees a slot in the top k for a *different* document. So expansion does change the
+document ranking, not just the text handed to the generator, and it does so by improving
+result diversity.
+
+That was not the intent of the technique. It is a side effect of the deduplication that
+exists to avoid wasting context budget, and it is the kind of thing you only find by
+measuring something you expected not to move.
+
+The general habit: **when a measurement contradicts your prediction, the mechanism behind
+the surprise is usually more valuable than the number.**
 
 ## Metadata filtering
 

@@ -80,13 +80,11 @@ makes every retrieval strategy look equally good, which would make lesson 03 poi
 
 ## Exercise
 
-1. Run `pytest` and read `tests/test_config.py`. It asserts that a clean clone defaults
-   to the offline profile. Why is that worth a test rather than a comment?
-2. Read `ragkit/types.py`. `Chunk` keeps `text` and `context` as separate fields, and
-   `embed_text` joins them. Before reading lesson 07, guess why they are not just one
-   string. (Hint: what happens to a citation if you cite generated text?)
-3. Open `ragkit/providers/local.py` and find `QUERY_INSTRUCTION`. Why is it applied in
-   `embed_query` but not `embed_documents`? What would break, and how would you notice?
+See [exercise.md](exercise.md), and run the environment check first:
+
+```bash
+python lessons/00-setup/run.py
+```
 
 ## Next
 

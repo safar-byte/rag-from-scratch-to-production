@@ -171,6 +171,141 @@ class ClaudeGenerator:
         )
         return text.strip(), self._usage(response)
 
+    def generate_with_citations(
+        self,
+        *,
+        system: str,
+        question: str,
+        documents: list[tuple[str, str]],
+        max_tokens: int = 4096,
+        cache_documents: bool = False,
+    ) -> tuple[str, list[dict[str, Any]], Usage]:
+        """Generate with the Citations API, which returns grounded spans.
+
+        Marker parsing (`generate/answer.py`) asks the model to type `[1]` and trusts
+        it. The model can cite a passage it did not use, or use one it did not cite, and
+        nothing detects either. This returns the spans the model actually grounded each
+        claim in, which is a different guarantee entirely.
+
+        `documents` is a list of (title, text). Each becomes a `document` content block
+        with `citations.enabled`, and the API reports `cited_text` plus character offsets
+        back into the document it came from.
+
+        Two constraints worth knowing:
+
+        * Citations are **incompatible with `output_config.format`** - the pair returns a
+          400. So the citation path and the structured-output path are separate routes,
+          and you pick per endpoint rather than enabling both.
+        * `citations` must be set on every document block or none of them.
+        """
+        blocks: list[dict[str, Any]] = [
+            {
+                "type": "document",
+                "title": title,
+                "source": {"type": "text", "media_type": "text/plain", "data": text},
+                "citations": {"enabled": True},
+            }
+            for title, text in documents
+        ]
+        if cache_documents and blocks:
+            # The documents are the stable prefix; the question changes per request. A
+            # breakpoint on the last document caches everything before the question.
+            blocks[-1]["cache_control"] = {"type": "ephemeral"}
+        blocks.append({"type": "text", "text": question})
+
+        response = self._client.messages.create(
+            model=self._model,
+            max_tokens=max_tokens,
+            system=system,
+            messages=[{"role": "user", "content": blocks}],
+            thinking={"type": "adaptive"},
+            output_config={"effort": self._effort},
+        )
+        if response.stop_reason == "refusal":
+            detail = getattr(response, "stop_details", None)
+            raise RuntimeError(
+                f"Claude declined this request (category: {getattr(detail, 'category', None)})."
+            )
+
+        # The response splits into several text blocks; only some carry citations.
+        text_parts: list[str] = []
+        citations: list[dict[str, Any]] = []
+        for block in response.content:
+            if getattr(block, "type", None) != "text":
+                continue
+            text_parts.append(block.text)
+            for citation in getattr(block, "citations", None) or []:
+                citations.append(
+                    {
+                        "cited_text": getattr(citation, "cited_text", ""),
+                        "document_index": getattr(citation, "document_index", None),
+                        "document_title": getattr(citation, "document_title", None),
+                        # Plain text documents report char_location; PDFs report
+                        # page_location instead, so neither field is guaranteed.
+                        "start_char_index": getattr(citation, "start_char_index", None),
+                        "end_char_index": getattr(citation, "end_char_index", None),
+                    }
+                )
+        return "".join(text_parts).strip(), citations, self._usage(response)
+
+    def generate_batch(
+        self,
+        requests: list[tuple[str, str, str]],
+        *,
+        max_tokens: int = 200,
+        poll_seconds: float = 10.0,
+        timeout_seconds: float = 3600.0,
+    ) -> dict[str, str]:
+        """Run many independent generations through the Batch API, at about half price.
+
+        For ingest-time passes with no latency requirement - contextualising a corpus
+        (lesson 07), grading an eval set, extracting entities for a graph. Anything
+        per-query belongs on the normal path.
+
+        `requests` is a list of (custom_id, system, prompt). Returns {custom_id: text}.
+
+        **Results arrive in any order**, so they are keyed by `custom_id` and never by
+        position. Keying by position is the classic way to silently mis-assign every
+        result in a batch.
+        """
+        import time
+
+        batch = self._client.messages.batches.create(
+            requests=[
+                {
+                    "custom_id": custom_id,
+                    "params": {
+                        "model": self._model,
+                        "max_tokens": max_tokens,
+                        "system": system,
+                        "messages": [{"role": "user", "content": prompt}],
+                    },
+                }
+                for custom_id, system, prompt in requests
+            ]
+        )
+
+        deadline = time.monotonic() + timeout_seconds
+        while True:
+            status = self._client.messages.batches.retrieve(batch.id).processing_status
+            if status == "ended":
+                break
+            if time.monotonic() > deadline:
+                raise TimeoutError(f"Batch {batch.id} still {status} after {timeout_seconds}s.")
+            time.sleep(poll_seconds)
+
+        out: dict[str, str] = {}
+        for entry in self._client.messages.batches.results(batch.id):
+            if entry.result.type != "succeeded":
+                # Record the failure rather than dropping it; a silently missing id
+                # looks like a chunk that had nothing to say about itself.
+                out[entry.custom_id] = ""
+                continue
+            out[entry.custom_id] = "".join(
+                b.text for b in entry.result.message.content if getattr(b, "type", None) == "text"
+            ).strip()
+        return out
+
     def _usage(self, response: Any) -> Usage:
         raw = response.usage
         cache_read = int(getattr(raw, "cache_read_input_tokens", 0) or 0)

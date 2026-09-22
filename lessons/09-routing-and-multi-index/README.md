@@ -72,6 +72,34 @@ be small by construction. That is not a weak result, it is the correct one: rout
 targeted intervention, and a router that reclassified half the corpus would be doing
 something else. Judge it on whether the questions it moved were the right ones.
 
+## What it measured, including the version that was worse
+
+The first implementation routed lexical queries to **bare BM25** and everything else to
+the full reranked path. It measured *worse than not routing at all*:
+
+| Pipeline | lookup R@1 | ALL R@1 | nDCG@5 |
+|---|---|---|---|
+| rerank (no routing) | 1.000 | 0.811 | 0.946 |
+| router, bare BM25 branch | **0.900** | 0.818 | 0.946 |
+| **router, both branches reranked** | **1.000** | **0.841** | **0.955** |
+
+The failing question was `q02`, "What does exit status 75 from the indexer mean?". BM25
+alone put `09-query-understanding.md` first instead of `07-operations.md`. The reranker
+would have fixed it — the lexical branch simply did not have one.
+
+**The design flaw: the router was deciding two things at once.** Its job is choosing the
+candidate *source*. Whether to rerank is a separate decision, and reranking helps
+whichever source was picked. Conflating them threw away lesson 05's gains on every
+routed query.
+
+With both branches reranked, routing becomes the best pipeline in the table — nDCG@5
+0.955 against 0.946 for no routing. A small gain, from four questions, in the right
+direction.
+
+The transferable point is not about routing. **When you add a component that selects
+between paths, check that every path still has everything the unrouted version had.** It
+is easy to build a router that quietly downgrades the branch it sends traffic to.
+
 ## Heuristic or model?
 
 `LlmRouter` is more flexible and costs a full generation before retrieval starts. On this

@@ -77,6 +77,9 @@ Corpus: `data/` (16 documents, 113 chunks). Golden set: `ragkit/eval/golden.yaml
 | Run | Retriever | Chunks | R@1 | R@3 | R@5 | MRR | nDCG@5 | Grounded | Relevance | Refusal | ms |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 <!-- local-results -->
+| L09: router (both branches reranked) | router(lex=rerank(bm25,n=10),sem=rerank(hybrid(dense+bm25,rrf60),n=10)) | 113 | 0.841 | 0.966 | 0.989 | 0.949 | 0.955 | - | - | - | 2556 |
+| L09: router | router(lex=bm25,sem=rerank(hybrid(dense+bm25,rrf60),n=10)) | 113 | 0.818 | 0.966 | 0.989 | 0.938 | 0.946 | - | - | - | 1749 |
+| L08: parent | parent(rerank(hybrid(dense+bm25,rrf60),n=10),w=600) | 113 | 0.841 | 0.966 | 0.989 | 0.949 | 0.953 | - | - | - | 4750 |
 | L05 + generation (qwen2.5:1.5b, deterministic judge) | rerank(hybrid(dense+bm25,rrf60),n=10) | 113 | 0.811 | 0.960 | 0.987 | 0.939 | 0.946 | 0.672 | 0.649 | 0.000 | 35513 |
 | L05: rerank, shortlist 10 (swept) | rerank(hybrid(dense+bm25,rrf60),n=10) | 113 | 0.811 | 0.960 | 0.987 | 0.939 | 0.946 | - | - | - | 1613 |
 | L04-05: rerank | rerank(hybrid(dense+bm25,rrf60),n=25) | 113 | 0.811 | 0.960 | 0.987 | 0.939 | 0.946 | - | - | - | 3386 |

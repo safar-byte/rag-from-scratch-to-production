@@ -44,6 +44,11 @@ cloud = [
 graph = [
     "networkx>=3.4",
 ]
+# Optional production vector store. Chroma stays the default so a clean clone needs
+# nothing extra; this is the path once the corpus outgrows an embedded store.
+qdrant = [
+    "qdrant-client>=1.12",
+]
 dev = [
     "pytest>=8.3",
     "pytest-asyncio>=0.24",

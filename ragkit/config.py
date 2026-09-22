@@ -72,7 +72,12 @@ class Settings(BaseSettings):
     cloud_rerank_model: str = Field(default="rerank-2.5", alias="CLOUD_RERANK_MODEL")
 
     # ---- storage ------------------------------------------------------------
+    # "chroma" (embedded, the default - no server, no Docker) or "qdrant".
     vector_store: str = Field(default="chroma", alias="VECTOR_STORE")
+    # Qdrant Cloud has a free tier; leaving the URL unset uses Qdrant's in-process
+    # local mode, which also needs no server.
+    qdrant_url: str | None = Field(default=None, alias="QDRANT_URL")
+    qdrant_api_key: str | None = Field(default=None, alias="QDRANT_API_KEY")
     chroma_path: Path = Field(default=REPO_ROOT / ".chroma", alias="CHROMA_PATH")
 
     # ---- retrieval defaults -------------------------------------------------

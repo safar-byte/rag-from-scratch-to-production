@@ -81,12 +81,23 @@ class RagPipeline:
         self.transform = transform
         self.parent_window = parent_window
         self._documents: list[Any] | None = None
-        self._store = get_store(self.settings)
+        # Qdrant fixes the vector size at collection creation, so it needs the
+        # dimension up front; Chroma infers it. Built lazily for qdrant so the
+        # embedder is only loaded when it is actually required.
+        self._store_instance: Any = (
+            get_store(self.settings) if self.settings.vector_store == "chroma" else None
+        )
         self._bm25 = Bm25Index(self.settings.chroma_path.parent / ".bm25")
         self._embedder: Any = None
         self._generator: Any = None
         self._reranker: Any = None
         self._retriever: Any = None
+
+    @property
+    def _store(self) -> Any:
+        if self._store_instance is None:
+            self._store_instance = get_store(self.settings, dimension=self.embedder.dimension)
+        return self._store_instance
 
     # ---- lazy providers -----------------------------------------------------
 
@@ -141,15 +152,24 @@ class RagPipeline:
             return lexical
 
         if self.strategy is RetrievalStrategy.ROUTER:
-            # Lexical queries go to BM25 alone; everything else takes the full
-            # reranked path. Motivated directly by lesson 04's measurement, where
-            # equal-weight fusion let BM25 damage vocabulary-mismatch questions.
+            # BOTH branches are reranked. The first version routed lexical queries to
+            # bare BM25 and measured WORSE than not routing at all - lookup R@1 fell
+            # 1.000 -> 0.900, because BM25 alone put the wrong document first for
+            # "What does exit status 75 mean?".
+            #
+            # The lesson: the router's job is choosing the candidate *source*, not
+            # deciding whether to rerank. Reranking helps whichever source was picked,
+            # and conflating the two decisions loses the gains from lesson 05 on every
+            # routed query.
             semantic = RerankingRetriever(
                 HybridRetriever([dense, lexical], candidates=self.settings.rerank_candidates),
                 self.reranker,
                 candidates=self.settings.rerank_candidates,
             )
-            return HeuristicRouter(lexical, semantic)
+            reranked_lexical = RerankingRetriever(
+                lexical, self.reranker, candidates=self.settings.rerank_candidates
+            )
+            return HeuristicRouter(reranked_lexical, semantic)
 
         hybrid = HybridRetriever([dense, lexical], candidates=self.settings.rerank_candidates)
         if self.strategy is RetrievalStrategy.HYBRID:

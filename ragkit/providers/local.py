@@ -12,6 +12,7 @@ Heavy imports are deferred into the constructors so that merely importing this m
 from __future__ import annotations
 
 import json
+from collections.abc import Iterator
 from typing import Any
 
 import httpx
@@ -142,6 +143,42 @@ class OllamaGenerator:
                 "max_tokens, or use a non-reasoning model."
             )
         return text, usage
+
+    def stream(self, *, system: str, prompt: str, max_tokens: int = 1024) -> Iterator[str]:
+        """Yield the answer in pieces as the model produces it.
+
+        Streaming does not make generation faster; it makes the wait *visible*. On this
+        CPU profile a full answer takes ~30s, and the difference between 30 seconds of
+        blank screen and 30 seconds of text appearing is the difference between a system
+        that feels broken and one that feels slow.
+
+        Reasoning-model handling matches `generate`: Ollama emits `thinking` separately
+        from `response`, so only the answer tokens are yielded.
+        """
+        payload: dict[str, Any] = {
+            "model": self._settings.local_generation_model,
+            "system": system,
+            "prompt": prompt,
+            "stream": True,
+            "options": {
+                "temperature": 0.0,
+                "num_predict": max_tokens + self.THINKING_HEADROOM,
+            },
+        }
+        with self._client.stream("POST", "/api/generate", json=payload) as response:
+            response.raise_for_status()
+            for line in response.iter_lines():
+                if not line:
+                    continue
+                try:
+                    chunk = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                piece = chunk.get("response") or ""
+                if piece:
+                    yield piece
+                if chunk.get("done"):
+                    return
 
     def generate_json(self, *, system: str, prompt: str, max_tokens: int = 1024) -> Any:
         """Ask for JSON back.

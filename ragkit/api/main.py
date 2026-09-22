@@ -17,15 +17,17 @@ one you can only re-run and hope about.
 
 from __future__ import annotations
 
+import json
 import time
 from typing import Any
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
+from sse_starlette.sse import EventSourceResponse
 
 from ragkit.config import get_settings
-from ragkit.generate import build_prompt
+from ragkit.generate import STRICT_SYSTEM_PROMPT, SYSTEM_PROMPT, abstain, build_prompt
 from ragkit.pipeline import RagPipeline, RetrievalStrategy
 from ragkit.types import Answer, Scored
 
@@ -152,3 +154,59 @@ def query(request: QueryRequest) -> dict[str, Any]:
     except Exception as exc:  # noqa: BLE001
         raise HTTPException(status_code=500, detail=str(exc)) from exc
     return {"question": request.question, **_serialise_answer(answer, request.question)}
+
+
+@app.post("/query/stream")
+async def query_stream(request: QueryRequest) -> EventSourceResponse:
+    """Server-sent events: contexts first, then answer tokens as they arrive.
+
+    Streaming does not make generation faster, it makes the wait visible - and the
+    ordering matters as much as the streaming. Retrieval finishes in about a second
+    while generation takes ~30s on CPU, so the contexts are sent immediately. The user
+    can start reading the sources while the answer is still being written, and if
+    retrieval was wrong they can see that without waiting for the answer at all.
+
+    Events: `contexts`, then repeated `token`, then `done` (or `error`).
+    """
+    pipeline = get_pipeline(
+        request.strategy, request.transform, request.score_floor, request.strict_prompt
+    )
+
+    def events() -> Any:
+        try:
+            results = pipeline.retrieve(request.question, top_k=request.top_k)
+            yield {
+                "event": "contexts",
+                "data": json.dumps({"contexts": [_serialise(r) for r in results]}),
+            }
+
+            # The abstention gate runs before generation here too, so a refusal costs
+            # no tokens on the streaming path either.
+            if request.score_floor is not None:
+                decision = abstain.decide(results, floor=request.score_floor)
+                if decision.abstain:
+                    yield {"event": "token", "data": json.dumps({"text": abstain.REFUSAL_TEXT})}
+                    yield {
+                        "event": "done",
+                        "data": json.dumps({"abstained": True, "reason": decision.reason}),
+                    }
+                    return
+
+            system = STRICT_SYSTEM_PROMPT if request.strict_prompt else SYSTEM_PROMPT
+            prompt = build_prompt(request.question, results)
+            generator = pipeline.generator
+
+            if not hasattr(generator, "stream"):
+                # The cloud generator has no stream helper here; fall back to one shot
+                # rather than failing, so the endpoint works on both profiles.
+                text, _usage = generator.generate(system=system, prompt=prompt)
+                yield {"event": "token", "data": json.dumps({"text": text})}
+            else:
+                for piece in generator.stream(system=system, prompt=prompt):
+                    yield {"event": "token", "data": json.dumps({"text": piece})}
+
+            yield {"event": "done", "data": json.dumps({"abstained": False})}
+        except Exception as exc:  # noqa: BLE001 - the client needs the reason, not a hang
+            yield {"event": "error", "data": json.dumps({"detail": str(exc)})}
+
+    return EventSourceResponse(events())
