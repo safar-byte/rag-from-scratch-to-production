@@ -77,6 +77,8 @@ Corpus: `data/` (16 documents, 113 chunks). Golden set: `ragkit/eval/golden.yaml
 | Run | Retriever | Chunks | R@1 | R@3 | R@5 | MRR | nDCG@5 | Grounded | Relevance | Refusal | ms |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 <!-- local-results -->
+| L06: rewrite -> rerank | rewrite->rerank(hybrid(dense+bm25,rrf60),n=10) | 113 | 0.795 | 0.943 | 0.966 | 0.914 | 0.920 | - | - | - | 3507 |
+| L11: graph traversal only | graph(h=1) | 113 | 0.409 | 0.409 | 0.409 | 0.432 | 0.414 | - | - | - | 0 |
 | L09: router (both branches reranked) | router(lex=rerank(bm25,n=10),sem=rerank(hybrid(dense+bm25,rrf60),n=10)) | 113 | 0.841 | 0.966 | 0.989 | 0.949 | 0.955 | - | - | - | 2556 |
 | L09: router | router(lex=bm25,sem=rerank(hybrid(dense+bm25,rrf60),n=10)) | 113 | 0.818 | 0.966 | 0.989 | 0.938 | 0.946 | - | - | - | 1749 |
 | L08: parent | parent(rerank(hybrid(dense+bm25,rrf60),n=10),w=600) | 113 | 0.841 | 0.966 | 0.989 | 0.949 | 0.953 | - | - | - | 4750 |
@@ -96,6 +98,22 @@ Claude for generation, Voyage for embeddings and reranking.
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 <!-- cloud-results -->
 | _awaiting a cloud run_ | - | - | - | - | - | - | - | - | - | - | - | - |
+
+## What is still unmeasured
+
+Honest inventory, because this table's whole claim is that every technique earns a row.
+
+| Technique | Status |
+|---|---|
+| hyde, multiquery, stepback | not run — one model call per question, ~20 min each locally |
+| contextual retrieval | implemented; the ingest pass is ~45 min on CPU and has not been run |
+| CRAG grading | implemented; needs a generation run to measure refusal and false refusals |
+| multi-hop | implemented; needs a generation run |
+| cloud profile | never run — no `VOYAGE_API_KEY` |
+
+Every one has a command in its lesson. The prior for the three remaining transforms is
+that they lose, since `rewrite` did and for structural reasons that apply to all of them
+— but a prior is not a measurement, and they are listed here rather than quietly assumed.
 
 ## Reading this table
 

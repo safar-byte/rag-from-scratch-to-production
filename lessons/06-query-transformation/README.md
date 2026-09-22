@@ -51,21 +51,59 @@ The framing that matters is therefore not "which of these should I use" but **"d
 of these buy more than it costs on my corpus"**. Run the eval with `--transform` and
 find out before adopting one.
 
-## What to expect here
+## What it measured
 
-Two structural reasons to be sceptical of a big win on *this* corpus:
+`rewrite` over the reranked pipeline, against the same pipeline untouched:
 
-1. **17 of 44 golden questions are saturated.** Lookup and conceptual sit at 1.000 at
-   every depth. A transformation cannot improve what is already perfect.
-2. **The vocabulary-mismatch questions are already handled** by hybrid retrieval plus
-   reranking, which took `vocab R@5` to 1.000 in lesson 05. There is very little left
-   for a query rewrite to fix.
+| Pipeline | R@1 | R@3 | R@5 | nDCG@5 | vocab R@5 | ms |
+|---|---|---|---|---|---|---|
+| rerank (no transform) | **0.811** | **0.960** | **0.987** | **0.946** | **1.000** | **1613** |
+| rewrite → rerank | 0.795 | 0.943 | 0.966 | 0.920 | 0.875 | 3507 |
 
-This is what "measure before adopting" means in practice. Query transformation is a real
-technique that solves a real problem — and on a corpus where that problem has already
-been solved another way, paying a model call per query for it is waste. The same
-technique on a corpus with genuinely mismatched vocabulary and no reranker would look
-entirely different.
+**Worse on every metric, at 2.2× the latency.** Including on the vocabulary-mismatch
+questions, which is the category query rewriting exists to help.
+
+### Why, and why you have seen this failure before
+
+The mechanism is the one from lesson 04. `Rewrite` keeps the original query *and* adds
+the rewritten one, then fuses the two rankings with RRF — and RRF weights them equally.
+When the rewrite is worse than the original, equal-weight fusion drags a good ranking
+down with a bad one.
+
+That is exactly how hybrid search lost to dense retrieval in lesson 04. Same fusion, same
+failure, different axis: there it was two retrievers, here it is two phrasings.
+
+**The general shape: adding a second opinion only helps if it is roughly as good as the
+first.** Fusion is not free insurance. It averages, and averaging with something worse
+makes things worse.
+
+### Two structural reasons this corpus was never going to reward it
+
+1. **17 of 44 questions are saturated** at 1.000 at every depth. A transformation cannot
+   improve what is already perfect — it can only break it, which is what happened to
+   `lookup` (R@1 1.000 → 0.900).
+2. **The vocabulary-mismatch questions were already solved** by hybrid retrieval plus
+   reranking, which took `vocab R@5` to 1.000 in lesson 05. There was nothing left for a
+   rewrite to fix, and plenty for it to disturb.
+
+Query transformation is a real technique for a real problem. On a corpus where that
+problem has already been solved another way, it is a model call per query that buys
+negative value. **That is the whole lesson, and you only get it by measuring.**
+
+### Still unmeasured
+
+`hyde`, `multiquery` and `stepback` have not been run — each needs a model call per
+question, ~20 minutes apiece on this CPU. Given `rewrite`'s result and the two structural
+reasons above, the prior is that they will also lose, and `multiquery` should lose
+hardest since it fuses the most rankings. Run them and find out:
+
+```bash
+for t in hyde multiquery stepback; do
+  python -m ragkit.eval.run --retrieval-only --strategy rerank --transform $t --write --label "L06: $t"
+done
+```
+
+If one of them wins, that is more interesting than anything written above.
 
 ## Implementation notes
 

@@ -56,6 +56,36 @@ No amount of parameter tuning fixes a corpus that is the wrong shape. Building t
 and measuring it is what tells you that, in about thirty seconds — and that is the
 correct outcome of this lesson, not a diagram.
 
+## Measured against the golden set
+
+The structural argument above is confirmed by the numbers, and they are worse than
+"unhelpful":
+
+| kind | n | R@5 (graph) | R@5 (rerank) |
+|---|---|---|---|
+| lookup | 10 | 0.400 | 1.000 |
+| conceptual | 9 | 0.333 | 1.000 |
+| multi_hop | 7 | 0.143 | 0.929 |
+| **vocab_mismatch** | 8 | **0.000** | **1.000** |
+| all | 44 | **0.409** | 0.987 |
+
+**The graph returned nothing at all for 34 of 44 questions.** No entity from the query
+appears in the graph, so there is nowhere to start a walk, and `GraphRetriever` correctly
+returns an empty list rather than inventing a seed.
+
+`vocab_mismatch` scoring 0.000 is the clearest signal. Those questions are phrased in a
+user's words rather than the document's — "Why do I get charged twice?" — so they contain
+no entity names by construction. **A graph keyed on entities cannot answer a question
+that names no entities**, which is precisely the case dense retrieval exists for.
+
+(The `unanswerable` row scores 1.000, which is an artifact: with no relevant document,
+retrieving nothing is correct by definition. Ignore it.)
+
+This is not a tuning result. It is what a graph looks like over a corpus with no
+structure to traverse, and it is why the honest deployment of GraphRAG is *alongside*
+vector retrieval for the minority of questions that name entities and need their
+connections — never instead of it.
+
 ## Two bugs found while building it
 
 Both are the silent kind, and both are instructive about entity extraction generally.
