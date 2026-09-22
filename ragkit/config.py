@@ -42,7 +42,13 @@ class Settings(BaseSettings):
 
     # ---- local backend ------------------------------------------------------
     ollama_host: str = Field(default="http://localhost:11434", alias="OLLAMA_HOST")
-    local_generation_model: str = Field(default="qwen2.5:7b", alias="LOCAL_GENERATION_MODEL")
+    # qwen2.5:1.5b, not a larger or a reasoning model. Measured on this CPU-only
+    # machine: qwen3:4b (a reasoning model) took over 10 minutes for one RAG query,
+    # because it spends ~1000 tokens thinking before it writes anything. A 1.5B
+    # non-reasoning model answers the same query in seconds. Retrieval quality is
+    # what this repo teaches; the generator only has to read the context it is given,
+    # and a small instruct model does that well enough to measure groundedness.
+    local_generation_model: str = Field(default="qwen2.5:1.5b", alias="LOCAL_GENERATION_MODEL")
     local_embedding_model: str = Field(
         default="BAAI/bge-small-en-v1.5", alias="LOCAL_EMBEDDING_MODEL"
     )

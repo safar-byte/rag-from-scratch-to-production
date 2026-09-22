@@ -42,7 +42,7 @@ pip install -e ".[dev,local]"
 
 # generation on the local profile runs through Ollama
 ollama serve &
-ollama pull qwen2.5:7b
+ollama pull qwen2.5:1.5b
 
 python -m ragkit.cli ingest
 python -m ragkit.cli ask "What does the corpus say about retrieval?"
@@ -51,13 +51,19 @@ python -m ragkit.cli ask "What does the corpus say about retrieval?"
 No `.env` needed — the default profile is local and offline. To switch to the cloud
 path, `cp .env.example .env`, add your keys, and set `RAG_PROFILE=cloud`.
 
+> **On CPU, model choice matters more than you would expect.** The defaults here are
+> a 1.5B non-reasoning generator and a 90MB reranker, chosen by measurement on a
+> GPU-less machine: a 4B *reasoning* model took over 10 minutes for one query,
+> because it spends ~1000 tokens thinking before writing an answer. If you have a
+> GPU, raise both — and re-measure rather than assume.
+
 ## The two profiles
 
 | | `local` (default) | `cloud` (opt-in) |
 |---|---|---|
 | Embeddings | BGE-small via sentence-transformers | Voyage AI |
 | Reranking | BGE cross-encoder | Voyage rerank |
-| Generation | Ollama (`qwen2.5:7b`) | Claude |
+| Generation | Ollama (`qwen2.5:1.5b`) | Claude |
 | Vector store | Chroma, embedded | Chroma or Qdrant Cloud |
 | Lexical | BM25 (`bm25s`) | same |
 | API keys | none | `ANTHROPIC_API_KEY`, `VOYAGE_API_KEY` |

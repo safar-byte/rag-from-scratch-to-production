@@ -91,6 +91,13 @@ class OllamaGenerator:
     def name(self) -> str:
         return self._settings.local_generation_model
 
+    # A reasoning model spends tokens thinking before it writes anything, and that
+    # spend comes out of the same budget as the answer. With too small a budget the
+    # thinking is truncated and `response` comes back EMPTY — a blank answer with no
+    # error, which reads downstream as a model that refused. Measured on qwen3:4b:
+    # a one-line answer needed ~270 tokens, of which ~250 were thinking.
+    THINKING_HEADROOM = 1024
+
     def generate(self, *, system: str, prompt: str, max_tokens: int = 1024) -> tuple[str, Usage]:
         payload: dict[str, Any] = {
             "model": self._settings.local_generation_model,
@@ -99,7 +106,10 @@ class OllamaGenerator:
             "stream": False,
             # Temperature 0: RAG answers should be reproducible, and the eval harness
             # in lesson 03 is meaningless if the same input gives different output.
-            "options": {"temperature": 0.0, "num_predict": max_tokens},
+            "options": {
+                "temperature": 0.0,
+                "num_predict": max_tokens + self.THINKING_HEADROOM,
+            },
         }
         try:
             response = self._client.post("/api/generate", json=payload)
@@ -117,7 +127,21 @@ class OllamaGenerator:
             output_tokens=int(body.get("eval_count", 0)),
             cost_usd=0.0,  # local inference is free; the cost column stays honest at 0
         )
-        return body.get("response", "").strip(), usage
+
+        text = (body.get("response") or "").strip()
+        thinking = (body.get("thinking") or "").strip()
+
+        # Ollama returns a reasoning model's chain of thought in a separate `thinking`
+        # field. An empty `response` alongside a non-empty `thinking` means generation
+        # stopped mid-reasoning, so raise instead of handing back "" — a silent empty
+        # answer would be scored as a refusal and quietly wreck the eval.
+        if not text and thinking:
+            raise RuntimeError(
+                f"{self._settings.local_generation_model} used its whole token budget "
+                f"thinking ({len(thinking)} chars) and produced no answer. Raise "
+                "max_tokens, or use a non-reasoning model."
+            )
+        return text, usage
 
     def generate_json(self, *, system: str, prompt: str, max_tokens: int = 1024) -> Any:
         """Ask for JSON back.

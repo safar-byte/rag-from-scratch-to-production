@@ -27,7 +27,7 @@ Growing the corpus is tracked in `PROGRESS.md`.
 
 Corpus: `data/`. Golden set: `ragkit/eval/golden.yaml` (25 questions: 8 lookup,
 9 conceptual, 5 multi-hop, 3 unanswerable). Embeddings BGE-small, generation
-`qwen2.5:7b` at temperature 0.
+`qwen2.5:1.5b` at temperature 0, reranking `ms-marco-MiniLM-L-6-v2`.
 
 | Run | Retriever | Chunks | R@1 | R@3 | R@5 | MRR | nDCG@5 | Grounded | Relevance | Refusal | ms |
 |---|---|---|---|---|---|---|---|---|---|---|---|

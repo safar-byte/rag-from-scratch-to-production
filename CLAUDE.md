@@ -33,6 +33,23 @@ sentence-transformers do not publish wheels for it. If a dependency install fail
 There is **no Docker** on the author's machine, so every dependency must run embedded or
 hosted. That is why the vector store is Chroma rather than a containerised Qdrant.
 
+**There is also no GPU.** Ollama runs on CPU, and that shapes two defaults:
+
+- The generator is `qwen2.5:1.5b`, not something larger and not a reasoning model. A
+  reasoning model (`qwen3:4b`) took **over 10 minutes** for a single RAG query here,
+  because it spends ~1000 tokens thinking before it writes anything. The 1.5B
+  non-reasoning model answers in ~30s. Retrieval quality is what this repo teaches; the
+  generator only has to read the context it is handed.
+- The reranker is `ms-marco-MiniLM-L-6-v2` (~90MB) rather than a BGE reranker (~2.3GB).
+
+If you are on a GPU box, both of these are worth revisiting — and worth re-measuring
+rather than assuming.
+
+**The CLI pays model load on every invocation.** A single `ragkit ask` reports ~40s of
+"retrieval" that is almost entirely loading BGE into memory; the eval harness, which
+loads once and runs 37 questions, measures ~1s per query. Do not read per-query cost off
+a one-shot CLI run.
+
 ## Architecture
 
 ```
