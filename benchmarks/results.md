@@ -77,6 +77,10 @@ Corpus: `data/` (16 documents, 113 chunks). Golden set: `ragkit/eval/golden.yaml
 | Run | Retriever | Chunks | R@1 | R@3 | R@5 | MRR | nDCG@5 | Grounded | Relevance | Refusal | ms |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 <!-- local-results -->
+| L07: rerank + contextual (CE reads source text only) | rerank(hybrid(dense+bm25,rrf60),n=10) | 113 | 0.841 | 0.966 | 0.989 | 0.949 | 0.955 | - | - | - | 227 |
+| L07: rerank + contextual (CE reads prefix) | rerank(hybrid(dense+bm25,rrf60),n=10) | 113 | 0.818 | 0.920 | 0.966 | 0.930 | 0.926 | - | - | - | 482 |
+| L07: dense + contextual (qwen2.5:1.5b prefixes) | dense | 113 | 0.852 | 0.977 | 0.977 | 0.962 | 0.954 | - | - | - | 195 |
+| L07 control: dense, no context (44 questions) | dense | 113 | 0.852 | 0.943 | 0.943 | 0.950 | 0.937 | - | - | - | 205 |
 | L06: rewrite -> rerank | rewrite->rerank(hybrid(dense+bm25,rrf60),n=10) | 113 | 0.795 | 0.943 | 0.966 | 0.914 | 0.920 | - | - | - | 3507 |
 | L11: graph traversal only | graph(h=1) | 113 | 0.409 | 0.409 | 0.409 | 0.432 | 0.414 | - | - | - | 0 |
 | L09: router (both branches reranked) | router(lex=rerank(bm25,n=10),sem=rerank(hybrid(dense+bm25,rrf60),n=10)) | 113 | 0.841 | 0.966 | 0.989 | 0.949 | 0.955 | - | - | - | 2556 |
@@ -106,10 +110,16 @@ Honest inventory, because this table's whole claim is that every technique earns
 | Technique | Status |
 |---|---|
 | hyde, multiquery, stepback | not run — one model call per question, ~20 min each locally |
-| contextual retrieval | implemented; the ingest pass is ~45 min on CPU and has not been run |
-| CRAG grading | implemented; needs a generation run to measure refusal and false refusals |
-| multi-hop | implemented; needs a generation run |
+| contextual retrieval | **measured** (rows L07 above): helps dense (R@3 0.943 → 0.977, vocab R@5 0.750 → 1.000), **hurts** rerank when the cross-encoder reads the prefix (R@5 0.989 → 0.966); reranking on source text only recovers it exactly. Prefixes by `qwen2.5:1.5b`, which ignores the prompt's "no 'this excerpt'" rule and sometimes adds facts the document lacks |
+| CRAG grading | **measured with a 1.5B grader**: correct refusal 1.000 but **8/10 false refusals** on lookups, against the strict prompt's 0.900 and 1/10. Not a row — it is a generation metric. The cloud grader is unmeasured |
+| multi-hop | **measured** on the 7 multi-hop questions: R@5 0.929 single-shot, 0.929 with up to 2 hops. No gain, 2 extra model calls per question |
 | cloud profile | never run — no `VOYAGE_API_KEY` |
+
+The L07 rows and the measurements above were produced while building the Colab notebooks
+(`lessons/*/colab.ipynb`), on a different CPU machine from the earlier rows — compare
+their quality columns, not their `ms`. The L07 control row is the matching dense baseline
+on the current 44-question set; compare the contextual rows against it, not against the
+37-question M3 baseline.
 
 Every one has a command in its lesson. The prior for the three remaining transforms is
 that they lose, since `rewrite` did and for structural reasons that apply to all of them

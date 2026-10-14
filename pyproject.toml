@@ -68,6 +68,11 @@ target-version = "py312"
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]
 
+[tool.ruff.lint.per-file-ignores]
+# The Colab notebooks introduce each import in the cell where it is first taught, and
+# print wide teaching tables. Everything else is linted as normal.
+"lessons/*/colab.ipynb" = ["E402", "E501"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"

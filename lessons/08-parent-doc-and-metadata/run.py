@@ -13,6 +13,8 @@ from rich.panel import Panel
 
 from ragkit.config import get_settings
 from ragkit.pipeline import RagPipeline
+from ragkit.retrieve import DenseRetriever
+from ragkit.retrieve.rerank import RerankingRetriever
 
 console = Console()
 
@@ -33,9 +35,15 @@ def main() -> None:
         # A pre-filter: the predicate is applied before the similarity search, so the
         # top k is computed over eligible documents only. Post-filtering the global top
         # k would return almost nothing for a selective predicate, silently.
-        results = plain.retriever.retrieve(
-            args.question, top_k=args.top_k, where={"doc_id": args.filter}
+        #
+        # Dense -> rerank rather than the hybrid pipeline: BM25 raises on a `where`
+        # clause instead of silently ignoring it, so the hybrid path cannot filter yet.
+        filtered = RerankingRetriever(
+            DenseRetriever(plain._store, plain.embedder),
+            plain.reranker,
+            candidates=settings.rerank_candidates,
         )
+        results = filtered.retrieve(args.question, top_k=args.top_k, where={"doc_id": args.filter})
         console.print(f"[dim]pre-filtered to doc_id={args.filter}[/dim]")
         for item in results:
             console.print(f"  {item.rank}. {item.chunk.doc_id}  {item.chunk.text[:90].strip()}...")

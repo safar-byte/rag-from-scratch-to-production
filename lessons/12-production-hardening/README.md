@@ -1,5 +1,7 @@
 # Lesson 12 — Production hardening and the inspector
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/safar-byte/rag-from-scratch-to-production/blob/main/lessons/12-production-hardening/colab.ipynb) — the detailed, runnable version of this lesson, with every technique built by hand and measured live.
+
 ```bash
 uvicorn ragkit.api.main:app --port 8000     # terminal 1
 cd ui && npm install && npm run dev         # terminal 2, then open localhost:5173

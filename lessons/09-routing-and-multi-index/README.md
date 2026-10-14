@@ -1,5 +1,7 @@
 # Lesson 09 — Routing
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/safar-byte/rag-from-scratch-to-production/blob/main/lessons/09-routing-and-multi-index/colab.ipynb) — the detailed, runnable version of this lesson, with every technique built by hand and measured live.
+
 ```bash
 python -m ragkit.eval.run --retrieval-only --strategy router
 python lessons/09-routing-and-multi-index/run.py
