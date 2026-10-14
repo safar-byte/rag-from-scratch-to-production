@@ -1,4 +1,16 @@
-# RAG: From Scratch to Production
+<div align="center">
+
+# 🔎 RAG: From Scratch to Production
+
+![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white)
+![React](https://img.shields.io/badge/React-20232A?style=flat-square&logo=react&logoColor=61DAFB)
+![Chroma](https://img.shields.io/badge/ChromaDB-vector_store-FF6446?style=flat-square)
+![Ollama](https://img.shields.io/badge/Ollama-local_LLM-000000?style=flat-square&logo=ollama&logoColor=white)
+![Claude](https://img.shields.io/badge/Claude-cloud_profile-D97757?style=flat-square&logo=anthropic&logoColor=white)
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)
+
+</div>
 
 A hands-on course and a working RAG service in the same repository. Thirteen lessons
 take you from "embed, search, stuff into a prompt" to a system with hybrid retrieval,
