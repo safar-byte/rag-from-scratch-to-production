@@ -1,5 +1,7 @@
 # Lesson 03 — Evaluation
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/safar-byte/rag-from-scratch-to-production/blob/main/lessons/03-evaluation-harness/colab.ipynb) — the detailed, runnable version of this lesson, with every technique built by hand and measured live.
+
 The pivot point of the whole course.
 
 ```bash

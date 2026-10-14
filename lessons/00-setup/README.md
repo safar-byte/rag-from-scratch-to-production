@@ -1,5 +1,7 @@
 # Lesson 00 — Setup
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/safar-byte/rag-from-scratch-to-production/blob/main/lessons/00-setup/colab.ipynb) — the detailed, runnable version of this lesson, with every technique built by hand and measured live.
+
 The environment, the corpus, and the one architectural decision everything else rests on.
 
 ## Set up

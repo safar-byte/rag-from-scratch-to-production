@@ -1,5 +1,7 @@
 # Lesson 01 — Naive RAG
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/safar-byte/rag-from-scratch-to-production/blob/main/lessons/01-naive-rag/colab.ipynb) — the detailed, runnable version of this lesson, with every technique built by hand and measured live.
+
 The whole pipeline, at its simplest.
 
 ```bash

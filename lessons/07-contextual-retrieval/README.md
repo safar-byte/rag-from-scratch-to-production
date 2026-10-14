@@ -1,5 +1,7 @@
 # Lesson 07 — Contextual retrieval
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/safar-byte/rag-from-scratch-to-production/blob/main/lessons/07-contextual-retrieval/colab.ipynb) — the detailed, runnable version of this lesson, with every technique built by hand and measured live.
+
 ```bash
 python lessons/07-contextual-retrieval/run.py --preview     # see prefixes, no indexing
 python lessons/07-contextual-retrieval/run.py --build       # contextualise and re-index

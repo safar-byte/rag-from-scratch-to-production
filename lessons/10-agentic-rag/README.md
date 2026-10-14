@@ -1,5 +1,7 @@
 # Lesson 10 — Agentic RAG
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/safar-byte/rag-from-scratch-to-production/blob/main/lessons/10-agentic-rag/colab.ipynb) — the detailed, runnable version of this lesson, with every technique built by hand and measured live.
+
 ```bash
 python lessons/10-agentic-rag/run.py "What is the default value of SHARD_REPLICATION_FACTOR?"
 python lessons/10-agentic-rag/run.py --multihop "Dense retrieval fails on error codes. Which method fixes that and why?"

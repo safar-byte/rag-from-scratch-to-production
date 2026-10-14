@@ -59,6 +59,14 @@ ragkit/
   providers/     base.py defines Embedder / Reranker / Generator protocols.
                  local.py = sentence-transformers + Ollama. cloud.py = Claude + Voyage.
   ingest/ store/ retrieve/ query/ graph/ agent/ generate/ eval/ api/
+colab/
+  colab_setup.py Colab bootstrap (deps from pyproject, Ollama in the background) and
+                 three display helpers. Not part of ragkit; never import it from ragkit.
+lessons/NN/colab.ipynb
+                 The detailed, runnable version of each lesson. Teaching-scale numpy
+                 re-implementations are fine here; anything reusable goes in ragkit/.
+                 Commit them without outputs, and execute every one end to end (with
+                 Ollama running) after changing ragkit APIs they call.
 ```
 
 ### Rules that keep this coherent

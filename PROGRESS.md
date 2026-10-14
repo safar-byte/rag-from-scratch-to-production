@@ -3,8 +3,11 @@
 The authoritative "where am I" file. Pull this repo on any machine, read this file, and
 you have the full context. Update it and commit before ending a session.
 
-**Current position:** all 13 lessons built, all 7 milestones done. The course is
-complete and every technique in it has been measured.
+**Current position:** all 13 lessons built, all 7 milestones done. Every lesson now also
+has a detailed Google Colab notebook (`lessons/NN/colab.ipynb`, index in
+`colab/README.md`), each executed end to end with Ollama before commit. Building them
+measured three things that had never been run and overturned one earlier claim — see
+"What the Colab build measured" below.
 
 ---
 
@@ -19,6 +22,7 @@ complete and every technique in it has been measured.
 | M4 | Query transformation + structural retrieval | 06–09 | ✅ |
 | M5 | Agentic RAG + GraphRAG | 10–11 | ✅ |
 | M6 | Production hardening + inspector UI | 12 | ✅ |
+| — | Colab notebooks for every lesson | 00–12 | ✅ |
 
 120 tests, all offline. CI green. Verified end to end with real models and a browser.
 
@@ -93,6 +97,41 @@ because cross-encoder scores separate answerable from unanswerable far worse (lo
 answerable −9.80 vs highest unanswerable −4.16). The stronger ranker is the weaker
 calibration signal.
 
+### What the Colab build measured
+
+Writing each notebook meant running every experiment again, on the current 44-question
+golden set, on a different CPU machine. Quality columns are comparable to the rows above;
+`ms` is not.
+
+- **Contextual retrieval, first measurement** (rows L07 in `benchmarks/results.md`).
+  Helps dense: R@3 0.943 → 0.977, vocab R@5 0.750 → 1.000. **Hurts rerank** when the
+  cross-encoder reads the prefix: R@5 0.989 → 0.966, vocab R@5 1.000 → 0.875. Reranking
+  the same shortlist on source `text` only recovers it exactly (0.989 / 1.000). The 1.5B
+  prefix writer ignores the prompt's "no 'this excerpt'" rule and sometimes adds facts the
+  document lacks; a bi-encoder averages that away, a cross-encoder reads every word.
+  **Use the prefix to find candidates, not to judge them.** `CrossEncoderReranker` still
+  scores `embed_text` — not changed, because a better prefix writer (Haiku) may flip this.
+- **CRAG with the local grader is strictly worse than the free strict prompt.** Correct
+  refusal 1.000 but 8/10 false refusals on lookup questions (strict prompt: 0.900 and
+  1/10). The 1.5B grader marks nearly everything `incorrect`, including "exit status 75",
+  whose answer is in the top passage. Answers open item #2 for the local profile; the cloud
+  grader is still unmeasured.
+- **Multi-hop: no gain.** 7 multi-hop questions, R@5 0.929 single-shot and 0.929 with up
+  to 2 hops, at up to 2 extra model calls each.
+- **Parent-document's recall gain did not reproduce.** Rerank and parent now tie exactly
+  (R@1 0.841 both). The earlier +0.030 was one question of 37 against an older rerank
+  configuration, and the diversity mechanism credited for it cannot move document-level
+  recall much: `dedupe_to_documents` already collapses same-document chunks before
+  scoring. The diversity is real for the generator (4.9 vs 3.2 distinct documents in the
+  top 5) — it acts on the prompt, not the metric.
+- **The BGE query prefix measured as no help here.** Over the 34 answerable questions,
+  paragraph-level ranking with the prefix: answer first 0.853, without: 0.882 (one
+  question). The model card calls it optional for v1.5. Kept as the default; lesson 00
+  now teaches the measurement instead of the claim.
+- **Rewrite → rerank reproduced as a loss** (R@5 0.989 → 0.966, vocab 1.000 → 0.875), the
+  **shortlist sweep reproduced** (depth 10 best R@5, depth 50 worse, shallow best R@1),
+  and the **0.60 score floor reproduced** (5/10 caught, 0/34 wrongly refused).
+
 ---
 
 ## Bugs found, all silent
@@ -117,6 +156,20 @@ worth recording.
 - **Entity extraction junk** — a `\s` in the Title Case pattern matched across newlines,
   producing `"Vector Search An"`; singleton entities were dropped entirely, making
   `FUSION_CONSTANT` unfindable.
+
+- **Chunk offsets are approximate when overlap is on** (found, not fixed).
+  `RecursiveChunker` joins the overlap tail with a single space and shifts `start_char`
+  by `len(tail) + 1`, but the source separator is often `"\n\n"`, so
+  `document.text[start_char:end_char]` is a character off. Nothing raises; a citation
+  highlighter would be misaligned. Lesson 02's notebook shows it and sets the fix as an
+  exercise.
+- **Multi-hop trace misreports a crashed planner** (found, not fixed).
+  `MultiHopRetriever._next_query` swallows exceptions and returns `None`, the same signal
+  as `ENOUGH`, so a planner that is down is logged as "model said enough". The loop is
+  safe; the trace lies. Lesson 10's notebook demonstrates it with a raising fake.
+- **`lessons/08-.../run.py --filter` crashed** (fixed). It filtered through the hybrid
+  pipeline, and `Bm25Retriever` correctly raises on a `where` clause. Now filters through
+  dense → rerank.
 
 ---
 
@@ -158,13 +211,15 @@ The highest-value work, in order:
 
 1. **Grow the corpus** to a few hundred documents. Everything else is bounded by this.
    Lesson 03's exercise 5 walks through it.
-2. **Measure CRAG's refusal rate**, including false refusals — the strict prompt
-   already reaches 0.900 for free, so CRAG has to beat that *and* justify a model
-   call. It may not. The interesting question is whether it gets there with fewer
-   false refusals than the prompt's 1-in-5.
-3. **Run the cloud profile** — prompt caching, the Citations API and real cost numbers
+2. **Fix the two silent bugs the Colab build found** (chunk offsets with overlap; the
+   multi-hop trace on planner failure) — both small, both need a regression test.
+3. **CRAG with a stronger grader.** Measured locally with the 1.5B model: it loses to the
+   strict prompt (8/10 false refusals). The open question is now whether a stronger
+   grader (qwen2.5:7b on a GPU, or Haiku on the cloud profile) beats 0.900 refusal with
+   fewer than 1-in-10 false refusals.
+4. **Run the cloud profile** — prompt caching, the Citations API and real cost numbers
    are all unexercised. Needs a `VOYAGE_API_KEY`.
-4. **Self-RAG reflection**, if lesson 10's exercise 6 finds a failure mode CRAG misses.
+5. **Self-RAG reflection**, if lesson 10's exercise 6 finds a failure mode CRAG misses.
 
 ---
 
@@ -196,3 +251,10 @@ most want to run.
 
 **2026-09-22 — No Self-RAG reflection.** CRAG catches the measured problem earlier and
 more cheaply. Fix a failure at the earliest stage that can see it.
+
+**2026-10-14 — Colab notebooks per lesson, executed before commit.** Each lesson gets a
+`colab.ipynb` that teaches from first principles, re-implements the technique by hand,
+and runs the experiments live. Dependencies are installed from `pyproject` rather than
+`pip install -e .`, so Colab's Python version never trips the 3.12 pin. Notebooks quote
+the repo's numbers and the numbers measured while writing them, and say so when they
+differ, rather than presenting either as the truth.

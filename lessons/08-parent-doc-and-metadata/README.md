@@ -1,5 +1,7 @@
 # Lesson 08 — Parent-document retrieval and metadata filtering
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/safar-byte/rag-from-scratch-to-production/blob/main/lessons/08-parent-doc-and-metadata/colab.ipynb) — the detailed, runnable version of this lesson, with every technique built by hand and measured live.
+
 ```bash
 python -m ragkit.eval.run --retrieval-only --strategy parent
 python lessons/08-parent-doc-and-metadata/run.py "how does chunk overlap work"

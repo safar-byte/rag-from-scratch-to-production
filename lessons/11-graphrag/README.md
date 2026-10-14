@@ -1,5 +1,7 @@
 # Lesson 11 — GraphRAG
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/safar-byte/rag-from-scratch-to-production/blob/main/lessons/11-graphrag/colab.ipynb) — the detailed, runnable version of this lesson, with every technique built by hand and measured live.
+
 ```bash
 python lessons/11-graphrag/run.py
 python lessons/11-graphrag/run.py "How does BM25 relate to HNSW?"

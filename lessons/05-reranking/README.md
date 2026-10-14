@@ -1,5 +1,7 @@
 # Lesson 05 — Reranking
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/safar-byte/rag-from-scratch-to-production/blob/main/lessons/05-reranking/colab.ipynb) — the detailed, runnable version of this lesson, with every technique built by hand and measured live.
+
 ```bash
 python -m ragkit.eval.run --retrieval-only --strategy rerank
 python lessons/05-reranking/run.py --sweep          # shortlist depth sweep

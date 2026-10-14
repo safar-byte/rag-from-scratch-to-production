@@ -30,7 +30,19 @@ system are not techniques at all:
 The lessons stay thin. The real code accumulates in [`ragkit/`](ragkit/), so by Lesson 12
 the lessons *are* the production service rather than thirteen disconnected scripts.
 
-## Quickstart
+## Learn it in Google Colab — nothing to install
+
+Every lesson has a detailed, runnable notebook that teaches the topic from first
+principles, builds each technique by hand, and runs the lesson's experiments live. Start
+here:
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/safar-byte/rag-from-scratch-to-production/blob/main/lessons/00-setup/colab.ipynb)
+&nbsp; **Lesson 00 — Setup, architecture and the corpus**
+
+The full list, runtime advice (some lessons want a free T4 GPU) and how the setup cell
+works are in [`colab/README.md`](colab/README.md).
+
+## Quickstart (local)
 
 ```bash
 git clone https://github.com/safar-byte/rag-from-scratch-to-production.git
@@ -86,25 +98,26 @@ so the same code runs both ways.
 
 ## Lessons
 
-| # | Lesson | What you build | Milestone |
-|---|---|---|---|
-| 00 | [Setup](lessons/00-setup/) | Environment, provider protocols, the corpus | M0 |
-| 01 | [Naive RAG](lessons/01-naive-rag/) | Ingest → embed → search → answer, end to end | M1 |
-| 02 | [Chunking](lessons/02-chunking/) | Fixed, recursive and token-aware splitting | M1 |
-| 03 | [**Evaluation**](lessons/03-evaluation-harness/) | Golden set, recall@k, MRR, nDCG, groundedness | M2 |
-| 04 | [Hybrid search](lessons/04-hybrid-search-rrf/) | BM25 + dense, fused with RRF | M3 |
-| 05 | [Reranking](lessons/05-reranking/) | Cross-encoder reranking over an over-fetched shortlist | M3 |
-| 06 | [Query transformation](lessons/06-query-transformation/) | Rewriting, HyDE, multi-query, step-back | M4 |
-| 07 | [Contextual retrieval](lessons/07-contextual-retrieval/) | LLM chunk prefixes, prompt caching, Batch API | M4 |
-| 08 | [Parent-document & metadata](lessons/08-parent-doc-and-metadata/) | Small-to-big retrieval, metadata filters | M4 |
-| 09 | [Routing](lessons/09-routing-and-multi-index/) | Query routing across multiple indexes | M4 |
-| 10 | [Agentic RAG](lessons/10-agentic-rag/) | CRAG grading, self-RAG reflection, multi-hop tools | M5 |
-| 11 | [GraphRAG](lessons/11-graphrag/) | Entity graph construction and traversal retrieval | M5 |
-| 12 | [Production hardening](lessons/12-production-hardening/) | Caching, citations, cost, tracing, the inspector UI | M6 |
+| # | Lesson | What you build | Milestone | Colab |
+|---|---|---|---|---|
+| 00 | [Setup](lessons/00-setup/) | Environment, provider protocols, the corpus | M0 | [open](https://colab.research.google.com/github/safar-byte/rag-from-scratch-to-production/blob/main/lessons/00-setup/colab.ipynb) |
+| 01 | [Naive RAG](lessons/01-naive-rag/) | Ingest → embed → search → answer, end to end | M1 | [open](https://colab.research.google.com/github/safar-byte/rag-from-scratch-to-production/blob/main/lessons/01-naive-rag/colab.ipynb) |
+| 02 | [Chunking](lessons/02-chunking/) | Fixed, recursive and token-aware splitting | M1 | [open](https://colab.research.google.com/github/safar-byte/rag-from-scratch-to-production/blob/main/lessons/02-chunking/colab.ipynb) |
+| 03 | [**Evaluation**](lessons/03-evaluation-harness/) | Golden set, recall@k, MRR, nDCG, groundedness | M2 | [open](https://colab.research.google.com/github/safar-byte/rag-from-scratch-to-production/blob/main/lessons/03-evaluation-harness/colab.ipynb) |
+| 04 | [Hybrid search](lessons/04-hybrid-search-rrf/) | BM25 + dense, fused with RRF | M3 | [open](https://colab.research.google.com/github/safar-byte/rag-from-scratch-to-production/blob/main/lessons/04-hybrid-search-rrf/colab.ipynb) |
+| 05 | [Reranking](lessons/05-reranking/) | Cross-encoder reranking over an over-fetched shortlist | M3 | [open](https://colab.research.google.com/github/safar-byte/rag-from-scratch-to-production/blob/main/lessons/05-reranking/colab.ipynb) |
+| 06 | [Query transformation](lessons/06-query-transformation/) | Rewriting, HyDE, multi-query, step-back | M4 | [open](https://colab.research.google.com/github/safar-byte/rag-from-scratch-to-production/blob/main/lessons/06-query-transformation/colab.ipynb) |
+| 07 | [Contextual retrieval](lessons/07-contextual-retrieval/) | LLM chunk prefixes, prompt caching, Batch API | M4 | [open](https://colab.research.google.com/github/safar-byte/rag-from-scratch-to-production/blob/main/lessons/07-contextual-retrieval/colab.ipynb) |
+| 08 | [Parent-document & metadata](lessons/08-parent-doc-and-metadata/) | Small-to-big retrieval, metadata filters | M4 | [open](https://colab.research.google.com/github/safar-byte/rag-from-scratch-to-production/blob/main/lessons/08-parent-doc-and-metadata/colab.ipynb) |
+| 09 | [Routing](lessons/09-routing-and-multi-index/) | Query routing across multiple indexes | M4 | [open](https://colab.research.google.com/github/safar-byte/rag-from-scratch-to-production/blob/main/lessons/09-routing-and-multi-index/colab.ipynb) |
+| 10 | [Agentic RAG](lessons/10-agentic-rag/) | CRAG grading, self-RAG reflection, multi-hop tools | M5 | [open](https://colab.research.google.com/github/safar-byte/rag-from-scratch-to-production/blob/main/lessons/10-agentic-rag/colab.ipynb) |
+| 11 | [GraphRAG](lessons/11-graphrag/) | Entity graph construction and traversal retrieval | M5 | [open](https://colab.research.google.com/github/safar-byte/rag-from-scratch-to-production/blob/main/lessons/11-graphrag/colab.ipynb) |
+| 12 | [Production hardening](lessons/12-production-hardening/) | Caching, citations, cost, tracing, the inspector UI | M6 | [open](https://colab.research.google.com/github/safar-byte/rag-from-scratch-to-production/blob/main/lessons/12-production-hardening/colab.ipynb) |
 
-Each lesson folder holds exactly three files: `README.md` (the idea, when to use it, how
-it fails, what it costs), `run.py` (thin — calls into `ragkit`), and `exercise.md` (a
-task plus the eval delta you should expect).
+Each lesson folder holds four files: `README.md` (the idea, when to use it, how it
+fails, what it costs), `run.py` (thin — calls into `ragkit`), `exercise.md` (a task plus
+the eval delta you should expect), and `colab.ipynb` (the same lesson as a detailed,
+runnable Google Colab notebook — see [`colab/`](colab/)).
 
 ## Results
 

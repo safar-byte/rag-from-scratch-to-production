@@ -1,5 +1,7 @@
 # Lesson 06 — Query transformation
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/safar-byte/rag-from-scratch-to-production/blob/main/lessons/06-query-transformation/colab.ipynb) — the detailed, runnable version of this lesson, with every technique built by hand and measured live.
+
 ```bash
 python lessons/06-query-transformation/run.py "why do I get charged twice"
 python -m ragkit.eval.run --retrieval-only --strategy rerank --transform rewrite
